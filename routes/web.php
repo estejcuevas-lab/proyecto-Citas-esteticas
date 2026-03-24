@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\DashboardController;
@@ -21,6 +22,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::resource('appointments', AppointmentController::class)->except(['show', 'destroy']);
     Route::resource('businesses', BusinessController::class)->except(['show', 'destroy']);
     Route::get('/businesses/{business}/services', [ServiceController::class, 'index'])->name('businesses.services.index');
     Route::get('/businesses/{business}/services/create', [ServiceController::class, 'create'])->name('businesses.services.create');

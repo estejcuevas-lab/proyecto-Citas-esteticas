@@ -73,6 +73,7 @@
 
             <div class="actions">
                 <a class="link-button" href="{{ route('businesses.index') }}">Gestionar negocios</a>
+                <a class="link-button" href="{{ route('appointments.index') }}">Gestionar citas</a>
             </div>
 
             <form class="logout" method="POST" action="{{ route('logout') }}">
