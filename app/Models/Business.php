@@ -29,8 +29,9 @@ class Business extends Model
     {
         return $this->hasMany(Service::class);
     }
+
     public function appointments(): HasMany
-{
-    return $this->hasMany(Appointment::class);
-}
+    {
+        return $this->hasMany(Appointment::class);
+    }
 }
