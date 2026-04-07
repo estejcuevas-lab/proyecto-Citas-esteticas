@@ -6,6 +6,7 @@ use App\Http\Requests\StoreAppointmentRequest;
 use App\Http\Requests\UpdateAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\Business;
+use App\Models\BusinessHour;
 use App\Models\Service;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -49,12 +50,16 @@ class AppointmentController extends Controller
     public function create(Request $request): View
     {
         return view('appointments.create', [
-            'businesses' => Business::query()->orderBy('name')->get(),
+            'businesses' => Business::query()
+                ->with(['hours' => fn ($query) => $query->orderBy('day_of_week')])
+                ->orderBy('name')
+                ->get(),
             'services' => Service::query()
                 ->where('active', true)
                 ->with('business')
                 ->orderBy('name')
                 ->get(),
+            'dayOptions' => BusinessHour::dayOptions(),
             'statuses' => Appointment::statuses(),
             'user' => $request->user(),
         ]);
@@ -75,12 +80,16 @@ class AppointmentController extends Controller
 
         return view('appointments.edit', [
             'appointment' => $appointment,
-            'businesses' => Business::query()->orderBy('name')->get(),
+            'businesses' => Business::query()
+                ->with(['hours' => fn ($query) => $query->orderBy('day_of_week')])
+                ->orderBy('name')
+                ->get(),
             'services' => Service::query()
                 ->where('active', true)
                 ->with('business')
                 ->orderBy('name')
                 ->get(),
+            'dayOptions' => BusinessHour::dayOptions(),
             'statuses' => Appointment::statuses(),
             'user' => $request->user(),
         ]);

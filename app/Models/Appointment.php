@@ -50,4 +50,11 @@ class Appointment extends Model
             self::STATUS_COMPLETED,
         ];
     }
+
+    protected function casts(): array
+    {
+        return [
+            'appointment_date' => 'date',
+        ];
+    }
 }

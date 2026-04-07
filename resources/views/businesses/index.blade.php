@@ -100,6 +100,7 @@
 
                             <div>
                                 <a class="button" href="{{ route('businesses.services.index', $business) }}">Servicios</a>
+                                <a class="button" href="{{ route('businesses.hours.index', $business) }}">Horarios</a>
                                 <a class="button secondary" href="{{ route('businesses.edit', $business) }}">Editar</a>
                             </div>
                         </div>

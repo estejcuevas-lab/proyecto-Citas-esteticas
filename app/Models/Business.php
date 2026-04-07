@@ -34,4 +34,9 @@ class Business extends Model
     {
         return $this->hasMany(Appointment::class);
     }
+
+    public function hours(): HasMany
+    {
+        return $this->hasMany(BusinessHour::class);
+    }
 }
