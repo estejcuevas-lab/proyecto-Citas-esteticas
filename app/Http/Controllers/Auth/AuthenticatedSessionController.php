@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * AUTORES: Erick Cuevas- Camilo Ramirez
+ * MATERIA: Cliente-Servidor
+ */
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -17,6 +22,10 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // ======================================================================
+        // GUIA 1 - ACTIVIDAD 4: LOGICA DE NODOS
+        // El servidor recibe credenciales del cliente, autentica y responde con una redireccion segura.
+        // ======================================================================
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],

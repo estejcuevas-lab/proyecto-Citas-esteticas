@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * AUTORES: Erick Cuevas- Camilo Ramirez
+ * MATERIA: Arquitectura y Diseno de Software
+ */
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,6 +15,10 @@ class BusinessHour extends Model
 {
     use HasFactory;
 
+    // ======================================================================
+    // GUIA 1 - ACTIVIDAD 2: MODELO CONCEPTUAL
+    // Esta entidad separa la configuracion operativa del negocio de la reserva concreta.
+    // ======================================================================
     protected $fillable = [
         'business_id',
         'day_of_week',
@@ -27,6 +36,10 @@ class BusinessHour extends Model
 
     public function business(): BelongsTo
     {
+        // ======================================================================
+        // GUIA 1 - ACTIVIDAD 2: MODELO CONCEPTUAL
+        // El horario se asocia a un negocio especifico dentro del modelo del dominio.
+        // ======================================================================
         return $this->belongsTo(Business::class);
     }
 

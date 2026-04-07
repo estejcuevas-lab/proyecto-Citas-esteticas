@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * AUTORES: Erick Cuevas- Camilo Ramirez
+ * MATERIA: Cliente-Servidor
+ */
+
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -9,6 +14,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ServiceController;
 use Illuminate\Support\Facades\Route;
 
+// ======================================================================
+// GUIA 1 - ACTIVIDAD 3: ANALISIS DE CAPAS
+// Las rutas separan la entrada HTTP de la logica manejada por controladores y vistas.
+// ======================================================================
 Route::get('/', function () {
     return view('home');
 })->name('home');

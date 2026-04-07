@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * AUTORES: Erick Cuevas- Camilo Ramirez
+ * MATERIA: Arquitectura y Diseno de Software
+ */
+
 namespace App\Services;
 
 use App\Models\Appointment;
@@ -9,6 +14,10 @@ use Carbon\Carbon;
 
 class AppointmentAvailabilityService
 {
+    // ======================================================================
+    // GUIA 2 - ACTIVIDAD 3: ESTRUCTURA DE CAPAS
+    // Este servicio concentra reglas de agenda para mantener separada la logica de negocio.
+    // ======================================================================
     public function calculateEndTime(Service $service, string $startTime): string
     {
         return Carbon::createFromFormat('H:i', $startTime)
@@ -18,6 +27,10 @@ class AppointmentAvailabilityService
 
     public function isWithinBusinessHours(Business $business, string $date, string $startTime, string $endTime): bool
     {
+        // ======================================================================
+        // GUIA 2 - ACTIVIDAD 4: INTEGRACION INICIAL
+        // Aqui se verifica la conexion funcional entre datos del negocio, horarios y agenda.
+        // ======================================================================
         $dayOfWeek = Carbon::parse($date)->dayOfWeek;
 
         $businessHour = $business->hours()
@@ -39,6 +52,10 @@ class AppointmentAvailabilityService
         string $endTime,
         ?int $ignoreAppointmentId = null
     ): bool {
+        // ======================================================================
+        // GUIA 4 - ACTIVIDAD 1: ATRIBUTOS DE CALIDAD
+        // Centralizar esta regla mejora mantenibilidad y consistencia del comportamiento.
+        // ======================================================================
         return Appointment::query()
             ->where('business_id', $business->id)
             ->where('appointment_date', $date)

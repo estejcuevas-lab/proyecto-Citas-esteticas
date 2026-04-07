@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * AUTORES: Erick Cuevas- Camilo Ramirez
+ * MATERIA: Cliente-Servidor
+ */
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAppointmentRequest;
@@ -16,6 +21,10 @@ class AppointmentController extends Controller
 {
     public function index(Request $request): View
     {
+        // ======================================================================
+        // GUIA 3 - ACTIVIDAD 1: DIAGRAMA DE COMUNICACION
+        // El controlador recibe la solicitud del cliente, consulta el modelo y responde con una vista.
+        // ======================================================================
         $user = $request->user();
 
         if ($user->isAdmin()) {

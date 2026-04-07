@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * AUTORES: Erick Cuevas- Camilo Ramirez
+ * MATERIA: Cliente-Servidor
+ */
+
 namespace App\Http\Requests;
 
 use App\Models\Appointment;
@@ -19,6 +24,10 @@ class StoreAppointmentRequest extends FormRequest
 
     public function rules(): array
     {
+        // ======================================================================
+        // GUIA 1 - ACTIVIDAD 5: DISENO DE PAYLOAD
+        // La trama de datos de la cita define tipos y formato esperados en cada campo de entrada.
+        // ======================================================================
         return [
             'business_id' => ['required', 'exists:businesses,id'],
             'service_id' => ['required', 'exists:services,id'],
@@ -32,6 +41,10 @@ class StoreAppointmentRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        // ======================================================================
+        // GUIA 4 - ACTIVIDAD 3: CAPA DE VALIDACION
+        // La validacion prepara los datos antes de que pasen a la logica principal de agenda.
+        // ======================================================================
         $service = Service::query()->find($this->input('service_id'));
 
         if ($service && $this->filled('start_time')) {
@@ -47,6 +60,14 @@ class StoreAppointmentRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
+            // ======================================================================
+            // GUIA 4 - ACTIVIDAD 2: GESTION DE PAYLOAD
+            // El flujo de lectura y ajuste del payload asegura consistencia antes de procesar la reserva.
+            // ======================================================================
+            // ======================================================================
+            // GUIA 4 - ACTIVIDAD 3: CAPA DE VALIDACION
+            // Aqui se aplican controles de seguridad e integridad para las entradas del usuario.
+            // ======================================================================
             $service = Service::query()->find($this->input('service_id'));
             $business = Business::query()->find($this->input('business_id'));
 

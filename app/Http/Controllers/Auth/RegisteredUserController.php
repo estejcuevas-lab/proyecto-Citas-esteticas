@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * AUTORES: Erick Cuevas- Camilo Ramirez
+ * MATERIA: Cliente-Servidor
+ */
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -20,8 +25,10 @@ class RegisteredUserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        // Cliente-Servidor: el servidor valida y procesa el registro antes
-        // de crear la sesion del usuario autenticado.
+        // ======================================================================
+        // GUIA 1 - ACTIVIDAD 4: LOGICA DE NODOS
+        // El cliente envia datos del formulario y el servidor los valida antes de persistirlos.
+        // ======================================================================
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
