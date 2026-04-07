@@ -23,6 +23,9 @@ class Appointment extends Model
     public const STATUS_CONFIRMED = 'confirmed';
     public const STATUS_CANCELLED = 'cancelled';
     public const STATUS_COMPLETED = 'completed';
+    public const PAYMENT_STATUS_PENDING_ADVANCE = 'pending_advance';
+    public const PAYMENT_STATUS_PARTIALLY_PAID = 'partially_paid';
+    public const PAYMENT_STATUS_PAID = 'paid';
 
     protected $fillable = [
         'user_id',
@@ -31,6 +34,10 @@ class Appointment extends Model
         'appointment_date',
         'start_time',
         'end_time',
+        'service_price',
+        'advance_percentage',
+        'advance_amount',
+        'payment_status',
         'status',
         'notes',
     ];
@@ -72,10 +79,22 @@ class Appointment extends Model
         ];
     }
 
+    public static function paymentStatuses(): array
+    {
+        return [
+            self::PAYMENT_STATUS_PENDING_ADVANCE,
+            self::PAYMENT_STATUS_PARTIALLY_PAID,
+            self::PAYMENT_STATUS_PAID,
+        ];
+    }
+
     protected function casts(): array
     {
         return [
             'appointment_date' => 'date',
+            'service_price' => 'decimal:2',
+            'advance_percentage' => 'decimal:2',
+            'advance_amount' => 'decimal:2',
         ];
     }
 }

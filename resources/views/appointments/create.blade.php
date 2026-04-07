@@ -44,7 +44,7 @@
             <select id="service_id" name="service_id" required>
                 <option value="">Selecciona un servicio</option>
                 @foreach ($services as $service)
-                    <option value="{{ $service->id }}" data-business-id="{{ $service->business_id }}" data-duration="{{ $service->duration_minutes }}" @selected(old('service_id') == $service->id)>
+                    <option value="{{ $service->id }}" data-business-id="{{ $service->business_id }}" data-duration="{{ $service->duration_minutes }}" data-price="{{ $service->price }}" @selected(old('service_id') == $service->id)>
                         {{ $service->name }} - {{ $service->business->name }}
                     </option>
                 @endforeach
@@ -63,6 +63,13 @@
             <select id="status" name="status" required>
                 @foreach ($statuses as $status)
                     <option value="{{ $status }}" @selected(old('status', $user->isClient() ? 'pending' : 'confirmed') === $status)>{{ $status }}</option>
+                @endforeach
+            </select>
+
+            <label for="payment_status">Estado del pago</label>
+            <select id="payment_status" name="payment_status">
+                @foreach ($paymentStatuses as $paymentStatus)
+                    <option value="{{ $paymentStatus }}" @selected(old('payment_status', 'pending_advance') === $paymentStatus)>{{ $paymentStatus }}</option>
                 @endforeach
             </select>
 
@@ -151,13 +158,15 @@
 
         const [hours, minutes] = startTime.split(':').map(Number);
         const duration = Number(selectedOption.dataset.duration);
+        const price = Number(selectedOption.dataset.price || 0);
+        const advanceAmount = (price * 0.5).toFixed(2);
         const date = new Date();
         date.setHours(hours, minutes + duration, 0, 0);
 
         const endHours = String(date.getHours()).padStart(2, '0');
         const endMinutes = String(date.getMinutes()).padStart(2, '0');
 
-        summaryBox.textContent = `Duracion del servicio: ${duration} minutos. Hora estimada de finalizacion: ${endHours}:${endMinutes}.`;
+        summaryBox.textContent = `Duracion del servicio: ${duration} minutos. Precio: $${price.toFixed(2)}. Adelanto requerido: $${advanceAmount}. Hora estimada de finalizacion: ${endHours}:${endMinutes}.`;
     }
 
     businessSelect.addEventListener('change', () => {

@@ -34,6 +34,7 @@ class UpdateAppointmentRequest extends FormRequest
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'status' => ['required', 'in:'.implode(',', Appointment::statuses())],
+            'payment_status' => ['nullable', 'in:'.implode(',', Appointment::paymentStatuses())],
             'notes' => ['nullable', 'string'],
         ];
     }

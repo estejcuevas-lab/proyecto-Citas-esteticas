@@ -11,6 +11,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAppointmentRequest;
 use App\Http\Requests\UpdateAppointmentRequest;
 use App\Models\Appointment;
+use App\Models\Service;
+use App\Services\AppointmentPaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -52,7 +54,17 @@ class AppointmentController extends Controller
 
     public function store(StoreAppointmentRequest $request): JsonResponse
     {
-        $appointment = $request->user()->appointments()->create($request->validated());
+        $validated = $request->validated();
+        $service = Service::query()->findOrFail($validated['service_id']);
+        $paymentData = app(AppointmentPaymentService::class)->buildPaymentData(
+            $service,
+            $validated['payment_status'] ?? null
+        );
+
+        $appointment = $request->user()->appointments()->create([
+            ...$validated,
+            ...$paymentData,
+        ]);
         $appointment->load(['user', 'business', 'service']);
 
         // ======================================================================
@@ -69,7 +81,17 @@ class AppointmentController extends Controller
     {
         $this->ensureAppointmentAccess($request, $appointment);
 
-        $appointment->update($request->validated());
+        $validated = $request->validated();
+        $service = Service::query()->findOrFail($validated['service_id']);
+        $paymentData = app(AppointmentPaymentService::class)->buildPaymentData(
+            $service,
+            $validated['payment_status'] ?? $appointment->payment_status
+        );
+
+        $appointment->update([
+            ...$validated,
+            ...$paymentData,
+        ]);
         $appointment->load(['user', 'business', 'service']);
 
         return response()->json([
@@ -97,6 +119,12 @@ class AppointmentController extends Controller
             'end_time' => $appointment->end_time,
             'status' => $appointment->status,
             'notes' => $appointment->notes,
+            'payment' => [
+                'service_price' => $appointment->service_price,
+                'advance_percentage' => $appointment->advance_percentage,
+                'advance_amount' => $appointment->advance_amount,
+                'payment_status' => $appointment->payment_status,
+            ],
             'user' => $appointment->relationLoaded('user') && $appointment->user ? [
                 'id' => $appointment->user->id,
                 'name' => $appointment->user->name,

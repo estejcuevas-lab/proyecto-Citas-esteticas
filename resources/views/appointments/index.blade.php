@@ -49,6 +49,9 @@
                             <p>Fecha: {{ $appointment->appointment_date }}</p>
                             <p>Hora: {{ $appointment->start_time }} - {{ $appointment->end_time }}</p>
                             <p>Estado: {{ $appointment->status }}</p>
+                            <p>Precio del servicio: ${{ number_format((float) $appointment->service_price, 2) }}</p>
+                            <p>Adelanto requerido: ${{ number_format((float) $appointment->advance_amount, 2) }} ({{ number_format((float) $appointment->advance_percentage, 0) }}%)</p>
+                            <p>Estado del pago: {{ $appointment->payment_status }}</p>
                             <p>Notas: {{ $appointment->notes ?: 'Sin notas' }}</p>
                         </div>
                         <div>

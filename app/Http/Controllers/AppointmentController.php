@@ -13,6 +13,7 @@ use App\Models\Appointment;
 use App\Models\Business;
 use App\Models\BusinessHour;
 use App\Models\Service;
+use App\Services\AppointmentPaymentService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -70,13 +71,24 @@ class AppointmentController extends Controller
                 ->get(),
             'dayOptions' => BusinessHour::dayOptions(),
             'statuses' => Appointment::statuses(),
+            'paymentStatuses' => Appointment::paymentStatuses(),
             'user' => $request->user(),
         ]);
     }
 
     public function store(StoreAppointmentRequest $request): RedirectResponse
     {
-        $appointment = $request->user()->appointments()->create($request->validated());
+        $validated = $request->validated();
+        $service = Service::query()->findOrFail($validated['service_id']);
+        $paymentData = app(AppointmentPaymentService::class)->buildPaymentData(
+            $service,
+            $validated['payment_status'] ?? null
+        );
+
+        $appointment = $request->user()->appointments()->create([
+            ...$validated,
+            ...$paymentData,
+        ]);
 
         return redirect()
             ->route('appointments.edit', $appointment)
@@ -100,6 +112,7 @@ class AppointmentController extends Controller
                 ->get(),
             'dayOptions' => BusinessHour::dayOptions(),
             'statuses' => Appointment::statuses(),
+            'paymentStatuses' => Appointment::paymentStatuses(),
             'user' => $request->user(),
         ]);
     }
@@ -108,7 +121,17 @@ class AppointmentController extends Controller
     {
         $this->ensureAppointmentAccess($request, $appointment);
 
-        $appointment->update($request->validated());
+        $validated = $request->validated();
+        $service = Service::query()->findOrFail($validated['service_id']);
+        $paymentData = app(AppointmentPaymentService::class)->buildPaymentData(
+            $service,
+            $validated['payment_status'] ?? $appointment->payment_status
+        );
+
+        $appointment->update([
+            ...$validated,
+            ...$paymentData,
+        ]);
 
         return redirect()
             ->route('appointments.edit', $appointment)
