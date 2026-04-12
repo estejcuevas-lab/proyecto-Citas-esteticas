@@ -1,9 +1,14 @@
 <?php
 
+/**
+ * AUTORES: Erick Cuevas- Camilo Ramirez
+ * MATERIA: Cliente-Servidor
+ */
+
 namespace App\Http\Controllers\Api;
 
+use App\Data\HolidayRepository;
 use App\Http\Controllers\Controller;
-use App\Models\Holiday;
 use App\Services\HolidaySyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,14 +16,15 @@ use RuntimeException;
 
 class HolidayController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    // ======================================================================
+    // GUIA 7 - ACTIVIDAD 1: INTEROPERABILIDAD WEB
+    // Este endpoint expone festivos en JSON para clientes HTTP que consultan informacion externa procesada por el sistema.
+    // ======================================================================
+    public function index(Request $request, HolidayRepository $holidayRepository): JsonResponse
     {
         $year = $request->integer('year');
 
-        $holidays = Holiday::query()
-            ->when($year, fn ($query) => $query->whereYear('holiday_date', $year))
-            ->orderBy('holiday_date')
-            ->get();
+        $holidays = $holidayRepository->allForYear($year);
 
         return response()->json($holidays);
     }
@@ -36,6 +42,10 @@ class HolidayController extends Controller
                 (string) $request->string('country_code', 'CO')
             );
         } catch (RuntimeException $exception) {
+            // ======================================================================
+            // GUIA 7 - ACTIVIDAD 3: TRATAMIENTO DE ERRORES
+            // El controlador devuelve un error controlado cuando el servicio externo falla.
+            // ======================================================================
             return response()->json([
                 'message' => $exception->getMessage(),
             ], 502);

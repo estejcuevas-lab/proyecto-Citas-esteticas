@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * AUTORES: Erick Cuevas- Camilo Ramirez
+ * MATERIA: Cliente-Servidor
+ */
+
 namespace Tests\Feature;
 
 use App\Models\Holiday;
@@ -12,6 +17,10 @@ class HolidaySyncTest extends TestCase
 {
     use RefreshDatabase;
 
+    // ======================================================================
+    // GUIA 7 - ACTIVIDAD 1: INTEROPERABILIDAD WEB
+    // La prueba valida el consumo de un servicio HTTP externo y la respuesta JSON del API local.
+    // ======================================================================
     public function test_admin_can_sync_holidays_from_external_api(): void
     {
         Http::fake([
@@ -48,6 +57,10 @@ class HolidaySyncTest extends TestCase
 
     public function test_api_returns_error_when_external_service_fails(): void
     {
+        // ======================================================================
+        // GUIA 7 - ACTIVIDAD 3: TRATAMIENTO DE ERRORES
+        // La prueba confirma que una falla del servicio externo se traduce en una respuesta controlada.
+        // ======================================================================
         Http::fake([
             'https://date.nager.at/api/v3/PublicHolidays/*' => Http::response([], 500),
         ]);

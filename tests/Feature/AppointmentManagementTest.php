@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * AUTORES: Erick Cuevas- Camilo Ramirez
+ * MATERIA: Arquitectura y Diseno de Software
+ */
+
 namespace Tests\Feature;
 
 use App\Models\Appointment;
@@ -14,6 +19,10 @@ class AppointmentManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    // ======================================================================
+    // GUIA 6 - ACTIVIDAD 4: CASO TESTIGO
+    // Esta prueba verifica el flujo completo desde la entrada del formulario hasta la persistencia de la cita.
+    // ======================================================================
     public function test_client_can_create_appointment_with_automatic_end_time_and_advance_payment(): void
     {
         $client = User::factory()->client()->create();

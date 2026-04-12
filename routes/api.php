@@ -17,6 +17,10 @@ use Illuminate\Support\Facades\Route;
 // GUIA 2 - ACTIVIDAD 1: INTEROPERABILIDAD
 // Las rutas API permiten intercambio de informacion JSON entre clientes externos y el servidor.
 // ======================================================================
+// ======================================================================
+// GUIA 7 - ACTIVIDAD 1: INTEROPERABILIDAD WEB
+// Estos endpoints exponen y sincronizan datos web para clientes HTTP y consumo de informacion externa.
+// ======================================================================
 Route::get('/businesses', [BusinessController::class, 'index']);
 Route::get('/businesses/{business}', [BusinessController::class, 'show']);
 Route::get('/businesses/{business}/services', [ServiceController::class, 'index']);

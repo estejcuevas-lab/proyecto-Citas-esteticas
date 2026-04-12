@@ -7,14 +7,24 @@
 
 namespace App\Services;
 
-use App\Models\Appointment;
+use App\Data\AppointmentRepository;
+use App\Data\HolidayRepository;
 use App\Models\Business;
-use App\Models\Holiday;
 use App\Models\Service;
 use Carbon\Carbon;
 
 class AppointmentAvailabilityService
 {
+    // ======================================================================
+    // GUIA 5 - ACTIVIDAD 4: ENCAPSULAMIENTO AVANZADO
+    // Las dependencias quedan encapsuladas como propiedades privadas del servicio de agenda.
+    // ======================================================================
+    public function __construct(
+        private readonly AppointmentRepository $appointmentRepository,
+        private readonly HolidayRepository $holidayRepository
+    ) {
+    }
+
     // ======================================================================
     // GUIA 2 - ACTIVIDAD 3: ESTRUCTURA DE CAPAS
     // Este servicio concentra reglas de agenda para mantener separada la logica de negocio.
@@ -52,10 +62,11 @@ class AppointmentAvailabilityService
 
     public function isHoliday(string $date, string $countryCode = 'CO'): bool
     {
-        return Holiday::query()
-            ->whereDate('holiday_date', $date)
-            ->where('country_code', $countryCode)
-            ->exists();
+        // ======================================================================
+        // GUIA 6 - ACTIVIDAD 3: COMPONENTE DE ACCESO
+        // La verificacion delega el acceso a datos a la capa app/Data en lugar de consultar directo desde el servicio.
+        // ======================================================================
+        return $this->holidayRepository->existsOnDate($date, $countryCode);
     }
 
     public function hasOverlap(
@@ -69,18 +80,12 @@ class AppointmentAvailabilityService
         // GUIA 4 - ACTIVIDAD 1: ATRIBUTOS DE CALIDAD
         // Centralizar esta regla mejora mantenibilidad y consistencia del comportamiento.
         // ======================================================================
-        return Appointment::query()
-            ->where('business_id', $business->id)
-            ->where('appointment_date', $date)
-            ->when($ignoreAppointmentId, fn ($query) => $query->where('id', '!=', $ignoreAppointmentId))
-            ->whereIn('status', [
-                Appointment::STATUS_PENDING,
-                Appointment::STATUS_CONFIRMED,
-            ])
-            ->where(function ($query) use ($startTime, $endTime) {
-                $query->where('start_time', '<', $endTime)
-                    ->where('end_time', '>', $startTime);
-            })
-            ->exists();
+        return $this->appointmentRepository->hasOverlap(
+            $business->id,
+            $date,
+            $startTime,
+            $endTime,
+            $ignoreAppointmentId
+        );
     }
 }
