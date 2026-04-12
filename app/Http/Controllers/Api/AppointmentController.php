@@ -13,6 +13,7 @@ use App\Http\Requests\UpdateAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\Service;
 use App\Services\AppointmentPaymentService;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -55,6 +56,7 @@ class AppointmentController extends Controller
     public function store(StoreAppointmentRequest $request): JsonResponse
     {
         $validated = $request->validated();
+        $validated = $this->normalizeAppointmentInput($request, $validated);
         $service = Service::query()->findOrFail($validated['service_id']);
         $paymentData = app(AppointmentPaymentService::class)->buildPaymentData(
             $service,
@@ -80,8 +82,10 @@ class AppointmentController extends Controller
     public function update(UpdateAppointmentRequest $request, Appointment $appointment): JsonResponse
     {
         $this->ensureAppointmentAccess($request, $appointment);
+        $this->ensureAppointmentCanBeEdited($request, $appointment);
 
         $validated = $request->validated();
+        $validated = $this->normalizeAppointmentInput($request, $validated, $appointment);
         $service = Service::query()->findOrFail($validated['service_id']);
         $paymentData = app(AppointmentPaymentService::class)->buildPaymentData(
             $service,
@@ -108,6 +112,29 @@ class AppointmentController extends Controller
         $ownsBusiness = $user->isAdmin() || $user->businesses()->whereKey($appointment->business_id)->exists();
 
         abort_unless($ownsAppointment || $ownsBusiness, 403, 'No puedes gestionar esta cita.');
+    }
+
+    private function ensureAppointmentCanBeEdited(Request $request, Appointment $appointment): void
+    {
+        if ($appointment->isClosed()) {
+            throw new HttpResponseException(response()->json([
+                'message' => 'Las citas canceladas o completadas ya no se pueden editar.',
+            ], 422));
+        }
+    }
+
+    private function normalizeAppointmentInput(Request $request, array $validated, ?Appointment $appointment = null): array
+    {
+        if ($request->user()->isClient()) {
+            $validated['status'] = $appointment?->status === Appointment::STATUS_CONFIRMED
+                ? Appointment::STATUS_CONFIRMED
+                : Appointment::STATUS_PENDING;
+
+            $validated['payment_status'] = $appointment?->payment_status
+                ?? Appointment::PAYMENT_STATUS_PENDING_ADVANCE;
+        }
+
+        return $validated;
     }
 
     private function transform(Appointment $appointment): array

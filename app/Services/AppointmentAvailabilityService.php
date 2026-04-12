@@ -9,6 +9,7 @@ namespace App\Services;
 
 use App\Models\Appointment;
 use App\Models\Business;
+use App\Models\Holiday;
 use App\Models\Service;
 use Carbon\Carbon;
 
@@ -31,6 +32,10 @@ class AppointmentAvailabilityService
         // GUIA 2 - ACTIVIDAD 4: INTEGRACION INICIAL
         // Aqui se verifica la conexion funcional entre datos del negocio, horarios y agenda.
         // ======================================================================
+        if ($this->isHoliday($date)) {
+            return false;
+        }
+
         $dayOfWeek = Carbon::parse($date)->dayOfWeek;
 
         $businessHour = $business->hours()
@@ -43,6 +48,14 @@ class AppointmentAvailabilityService
         }
 
         return $startTime >= $businessHour->opens_at && $endTime <= $businessHour->closes_at;
+    }
+
+    public function isHoliday(string $date, string $countryCode = 'CO'): bool
+    {
+        return Holiday::query()
+            ->whereDate('holiday_date', $date)
+            ->where('country_code', $countryCode)
+            ->exists();
     }
 
     public function hasOverlap(

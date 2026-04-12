@@ -16,6 +16,12 @@
         .card { border: 1px solid #e3d6ca; border-radius: 16px; padding: 1rem 1.2rem; }
         .muted { color: #6d5b4d; }
         .status { margin-bottom: 1rem; color: #1f6b36; font-weight: 700; }
+        .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+        .actions form { margin: 0; }
+        .actions button { border: 0; padding: 0.65rem 0.9rem; border-radius: 10px; cursor: pointer; font-weight: 700; }
+        .confirm { background: #466b42; color: #fff; }
+        .warn { background: #a94f3d; color: #fff; }
+        .info { background: #d9c3ab; color: #2a211c; }
     </style>
 </head>
 <body>
@@ -56,6 +62,43 @@
                         </div>
                         <div>
                             <a class="button secondary" href="{{ route('appointments.edit', $appointment) }}">Editar</a>
+                            <div class="actions">
+                                @if (($user->isAdmin() || $user->isBusiness()) && $appointment->status === 'pending')
+                                    <form method="POST" action="{{ route('appointments.status', $appointment) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="status" value="confirmed">
+                                        <button class="confirm" type="submit">Confirmar</button>
+                                    </form>
+                                @endif
+
+                                @if (($user->isAdmin() || $user->isBusiness()) && $appointment->status === 'confirmed')
+                                    <form method="POST" action="{{ route('appointments.status', $appointment) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="status" value="completed">
+                                        <button class="confirm" type="submit">Completar</button>
+                                    </form>
+                                @endif
+
+                                @if (($user->isAdmin() || $user->isBusiness()) && $appointment->payment_status !== 'paid')
+                                    <form method="POST" action="{{ route('appointments.payment', $appointment) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="payment_status" value="paid">
+                                        <button class="info" type="submit">Marcar pago</button>
+                                    </form>
+                                @endif
+
+                                @if ((($user->isAdmin() || $user->isBusiness()) || $appointment->user_id === $user->id) && !in_array($appointment->status, ['cancelled', 'completed']))
+                                    <form method="POST" action="{{ route('appointments.status', $appointment) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="status" value="cancelled">
+                                        <button class="warn" type="submit">Cancelar</button>
+                                    </form>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </article>

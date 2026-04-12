@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AppointmentController;
 use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\BusinessController;
 use App\Http\Controllers\Api\BusinessHourController;
+use App\Http\Controllers\Api\HolidayController;
 use App\Http\Controllers\Api\ServiceController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,9 +22,11 @@ Route::get('/businesses/{business}', [BusinessController::class, 'show']);
 Route::get('/businesses/{business}/services', [ServiceController::class, 'index']);
 Route::get('/businesses/{business}/hours', [BusinessHourController::class, 'index']);
 Route::get('/businesses/{business}/availability', [AvailabilityController::class, 'show']);
+Route::get('/holidays', [HolidayController::class, 'index']);
 
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/appointments', [AppointmentController::class, 'index']);
     Route::post('/appointments', [AppointmentController::class, 'store']);
     Route::put('/appointments/{appointment}', [AppointmentController::class, 'update']);
+    Route::post('/holidays/sync', [HolidayController::class, 'sync']);
 });

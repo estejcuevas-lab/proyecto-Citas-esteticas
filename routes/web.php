@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\BusinessHourController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\ServiceController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,7 +33,10 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::post('/holidays/sync', [HolidayController::class, 'sync'])->name('holidays.sync');
     Route::resource('appointments', AppointmentController::class)->except(['show', 'destroy']);
+    Route::patch('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus'])->name('appointments.status');
+    Route::patch('/appointments/{appointment}/payment', [AppointmentController::class, 'updatePaymentStatus'])->name('appointments.payment');
     Route::resource('businesses', BusinessController::class)->except(['show', 'destroy']);
     Route::get('/businesses/{business}/hours', [BusinessHourController::class, 'index'])->name('businesses.hours.index');
     Route::get('/businesses/{business}/hours/create', [BusinessHourController::class, 'create'])->name('businesses.hours.create');

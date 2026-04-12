@@ -85,7 +85,9 @@ class UpdateAppointmentRequest extends FormRequest
 
             $availability = app(AppointmentAvailabilityService::class);
 
-            if (! $availability->isWithinBusinessHours(
+            if ($availability->isHoliday($this->input('appointment_date'))) {
+                $validator->errors()->add('appointment_date', 'No se pueden agendar citas en un dia festivo sincronizado.');
+            } elseif (! $availability->isWithinBusinessHours(
                 $business,
                 $this->input('appointment_date'),
                 $this->input('start_time'),

@@ -88,6 +88,14 @@ class Appointment extends Model
         ];
     }
 
+    public function isClosed(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_CANCELLED,
+            self::STATUS_COMPLETED,
+        ], true);
+    }
+
     protected function casts(): array
     {
         return [
