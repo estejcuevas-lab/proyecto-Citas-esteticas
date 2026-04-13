@@ -5,67 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Negocios</title>
     <style>
+        :root {
+            --bg: #f4efe8;
+            --panel: rgba(255, 251, 247, 0.94);
+            --panel-strong: #fffaf5;
+            --line: #ddcdbd;
+            --text: #2f241c;
+            --muted: #776655;
+            --brand: #994b35;
+            --brand-deep: #6a2d1e;
+            --soft: #efe2d6;
+            --shadow: 0 20px 50px rgba(87, 56, 36, 0.14);
+        }
+        * { box-sizing: border-box; }
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f7f2ec;
-            color: #2a211c;
+            font-family: Georgia, "Times New Roman", serif;
+            background: linear-gradient(180deg, #f8f4ef 0%, var(--bg) 100%);
+            color: var(--text);
         }
-
-        .shell {
-            min-height: 100vh;
-            padding: 2rem;
-        }
-
+        .shell { min-height: 100vh; padding: 2rem; }
         .panel {
-            max-width: 900px;
+            max-width: 1120px;
             margin: 0 auto;
-            background: #fff;
-            border: 1px solid #dccab8;
-            border-radius: 20px;
             padding: 2rem;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
         }
-
-        .topbar, .row {
+        .topbar {
             display: flex;
             justify-content: space-between;
             gap: 1rem;
-            align-items: center;
+            flex-wrap: wrap;
+            align-items: start;
+            margin-bottom: 1.5rem;
         }
-
-        .topbar {
-            margin-bottom: 2rem;
+        h1 { margin: 0; font-size: clamp(2rem, 4vw, 3rem); }
+        .muted { color: var(--muted); line-height: 1.6; }
+        .button-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .button {
+            text-decoration: none;
+            padding: 0.9rem 1.1rem;
+            border-radius: 14px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .button.primary { background: linear-gradient(135deg, var(--brand), var(--brand-deep)); color: #fffaf5; }
+        .button.secondary { background: var(--soft); color: var(--text); }
+        .list { display: grid; gap: 1rem; }
+        .card {
+            padding: 1.25rem;
+            border-radius: 22px;
+            border: 1px solid var(--line);
+            background: var(--panel-strong);
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: start;
             flex-wrap: wrap;
         }
-
-        .button {
-            display: inline-block;
-            text-decoration: none;
-            padding: 0.85rem 1rem;
-            border-radius: 12px;
-            background: #6a4730;
-            color: white;
-            font-weight: 700;
-        }
-
-        .secondary {
-            background: #efe1d4;
-            color: #2a211c;
-        }
-
-        .list {
+        .meta {
             display: grid;
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.85rem;
+            margin-top: 1rem;
         }
-
-        .card {
-            border: 1px solid #e3d6ca;
-            border-radius: 16px;
-            padding: 1rem 1.2rem;
+        .meta-box {
+            padding: 0.95rem;
+            border-radius: 18px;
+            background: #fcf8f4;
+            border: 1px solid #eadfd4;
         }
-
-        .muted {
-            color: #6d5b4d;
+        .meta-box span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.35rem;
+        }
+        @media (max-width: 900px) {
+            .shell { padding: 1rem; }
+            .panel { padding: 1.25rem; }
         }
     </style>
 </head>
@@ -75,13 +102,12 @@
             <div class="topbar">
                 <div>
                     <h1>Negocios registrados</h1>
-                    <p class="muted">Aqui se gestiona la informacion base de cada negocio del sistema.</p>
+                    <p class="muted">Gestiona la información base de cada negocio y navega rápido hacia servicios y horarios.</p>
                 </div>
-
-                <div class="topbar">
-                    <a class="button secondary" href="{{ route('dashboard') }}">Volver</a>
+                <div class="button-row">
+                    <a class="button secondary" href="{{ route('dashboard') }}">Volver al panel</a>
                     @if ($user->isBusiness() || $user->isAdmin())
-                        <a class="button" href="{{ route('businesses.create') }}">Nuevo negocio</a>
+                        <a class="button primary" href="{{ route('businesses.create') }}">Nuevo negocio</a>
                     @endif
                 </div>
             </div>
@@ -91,23 +117,25 @@
                     <article class="card">
                         <div class="row">
                             <div>
-                                <h2>{{ $business->name }}</h2>
-                                <p class="muted">Tipo: {{ $business->type }}</p>
-                                <p>Correo: {{ $business->email ?: 'Sin registrar' }}</p>
-                                <p>Telefono: {{ $business->phone ?: 'Sin registrar' }}</p>
-                                <p>Direccion: {{ $business->address ?: 'Sin registrar' }}</p>
+                                <h2 style="margin:0 0 .35rem;">{{ $business->name }}</h2>
+                                <p class="muted" style="margin:0;">{{ $business->type }}</p>
                             </div>
-
-                            <div>
-                                <a class="button" href="{{ route('businesses.services.index', $business) }}">Servicios</a>
-                                <a class="button" href="{{ route('businesses.hours.index', $business) }}">Horarios</a>
+                            <div class="button-row">
+                                <a class="button primary" href="{{ route('businesses.services.index', $business) }}">Servicios</a>
+                                <a class="button primary" href="{{ route('businesses.hours.index', $business) }}">Horarios</a>
                                 <a class="button secondary" href="{{ route('businesses.edit', $business) }}">Editar</a>
                             </div>
+                        </div>
+                        <div class="meta">
+                            <div class="meta-box"><span>Correo</span>{{ $business->email ?: 'Sin registrar' }}</div>
+                            <div class="meta-box"><span>Teléfono</span>{{ $business->phone ?: 'Sin registrar' }}</div>
+                            <div class="meta-box"><span>Dirección</span>{{ $business->address ?: 'Sin registrar' }}</div>
                         </div>
                     </article>
                 @empty
                     <article class="card">
-                        <p>Todavia no hay negocios registrados para este usuario.</p>
+                        <h2 style="margin-top:0;">Todavía no hay negocios registrados</h2>
+                        <p class="muted">Cuando agregues un negocio, desde aquí podrás administrar sus servicios y horarios.</p>
                     </article>
                 @endforelse
             </div>
