@@ -18,6 +18,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AppointmentController extends Controller
 {
@@ -60,17 +61,22 @@ class AppointmentController extends Controller
 
     public function create(Request $request): View
     {
+        $businesses = Business::query()
+            ->with(['hours' => fn ($query) => $query->orderBy('day_of_week')])
+            ->orderBy('name')
+            ->get();
+
+        $dayOptions = BusinessHour::dayOptions();
+
         return view('appointments.create', [
-            'businesses' => Business::query()
-                ->with(['hours' => fn ($query) => $query->orderBy('day_of_week')])
-                ->orderBy('name')
-                ->get(),
+            'businesses' => $businesses,
             'services' => Service::query()
                 ->where('active', true)
                 ->with('business')
                 ->orderBy('name')
                 ->get(),
-            'dayOptions' => BusinessHour::dayOptions(),
+            'dayOptions' => $dayOptions,
+            'schedules' => $this->buildSchedules($businesses, $dayOptions),
             'statuses' => Appointment::statuses(),
             'paymentStatuses' => Appointment::paymentStatuses(),
             'user' => $request->user(),
@@ -92,6 +98,12 @@ class AppointmentController extends Controller
             ...$paymentData,
         ]);
 
+        if ($request->user()->isClient()) {
+            return redirect()
+                ->route('appointments.payment.show', $appointment)
+                ->with('status', 'Cita registrada. Solo falta pagar el anticipo para confirmarla.');
+        }
+
         return redirect()
             ->route('appointments.edit', $appointment)
             ->with('status', 'Cita registrada correctamente.');
@@ -101,18 +113,23 @@ class AppointmentController extends Controller
     {
         $this->ensureAppointmentAccess($request, $appointment);
 
+        $businesses = Business::query()
+            ->with(['hours' => fn ($query) => $query->orderBy('day_of_week')])
+            ->orderBy('name')
+            ->get();
+
+        $dayOptions = BusinessHour::dayOptions();
+
         return view('appointments.edit', [
             'appointment' => $appointment,
-            'businesses' => Business::query()
-                ->with(['hours' => fn ($query) => $query->orderBy('day_of_week')])
-                ->orderBy('name')
-                ->get(),
+            'businesses' => $businesses,
             'services' => Service::query()
                 ->where('active', true)
                 ->with('business')
                 ->orderBy('name')
                 ->get(),
-            'dayOptions' => BusinessHour::dayOptions(),
+            'dayOptions' => $dayOptions,
+            'schedules' => $this->buildSchedules($businesses, $dayOptions),
             'statuses' => Appointment::statuses(),
             'paymentStatuses' => Appointment::paymentStatuses(),
             'user' => $request->user(),
@@ -201,6 +218,58 @@ class AppointmentController extends Controller
         return back()->with('status', 'Estado del pago actualizado correctamente.');
     }
 
+    public function showPayment(Request $request, Appointment $appointment): View
+    {
+        $this->ensureAppointmentAccess($request, $appointment);
+
+        return view('appointments.payment', [
+            'appointment' => $appointment->load(['business', 'service', 'user']),
+            'user' => $request->user(),
+            'paymentMethods' => $this->paymentMethods(),
+        ]);
+    }
+
+    public function processPayment(Request $request, Appointment $appointment): RedirectResponse
+    {
+        $this->ensureAppointmentAccess($request, $appointment);
+
+        abort_unless(
+            $appointment->user_id === $request->user()->id || $request->user()->isAdmin(),
+            403,
+            'Solo el cliente titular o el administrador pueden procesar este anticipo.'
+        );
+
+        abort_if(
+            $appointment->isClosed(),
+            422,
+            'No puedes registrar pagos en una cita cancelada o completada.'
+        );
+
+        $validated = $request->validate([
+            'payment_method' => ['required', Rule::in(array_keys($this->paymentMethods()))],
+            'account_holder' => ['required', 'string', 'max:120'],
+            'reference' => ['required', 'string', 'max:60'],
+            'phone_number' => ['nullable', 'string', 'max:20'],
+            'account_number' => ['nullable', 'string', 'max:30'],
+            'card_number' => ['nullable', 'string', 'max:25'],
+            'card_name' => ['nullable', 'string', 'max:120'],
+            'expiry_date' => ['nullable', 'string', 'max:10'],
+            'cvv' => ['nullable', 'string', 'max:4'],
+        ]);
+
+        $this->validatePaymentMethodPayload($request, $validated['payment_method']);
+
+        $appointment->update([
+            'payment_status' => Appointment::PAYMENT_STATUS_PAID,
+            'status' => Appointment::STATUS_CONFIRMED,
+            'notes' => $this->appendPaymentNote($appointment->notes, $validated['payment_method'], $validated['reference']),
+        ]);
+
+        return redirect()
+            ->route('appointments.edit', $appointment)
+            ->with('status', 'Pago simulado correctamente. La cita ya quedo confirmada.');
+    }
+
     private function ensureAppointmentAccess(Request $request, Appointment $appointment): void
     {
         $user = $request->user();
@@ -246,5 +315,65 @@ class AppointmentController extends Controller
         }
 
         return $validated;
+    }
+
+    private function paymentMethods(): array
+    {
+        return [
+            'nequi' => 'Transferencia por Nequi',
+            'bancolombia_transfer' => 'Transferencia Bancolombia',
+            'credit_card' => 'Tarjeta de credito',
+            'debit_card' => 'Tarjeta debito',
+        ];
+    }
+
+    private function validatePaymentMethodPayload(Request $request, string $paymentMethod): void
+    {
+        $fieldsByMethod = [
+            'nequi' => ['phone_number'],
+            'bancolombia_transfer' => ['account_number'],
+            'credit_card' => ['card_number', 'card_name', 'expiry_date', 'cvv'],
+            'debit_card' => ['card_number', 'card_name', 'expiry_date', 'cvv'],
+        ];
+
+        foreach ($fieldsByMethod[$paymentMethod] ?? [] as $field) {
+            if (! $request->filled($field)) {
+                throw new HttpResponseException(
+                    back()->withErrors([
+                        $field => 'Completa los datos del metodo de pago seleccionado.',
+                    ])->withInput()
+                );
+            }
+        }
+    }
+
+    private function appendPaymentNote(?string $notes, string $paymentMethod, string $reference): string
+    {
+        $baseNotes = trim((string) $notes);
+        $paymentNote = sprintf(
+            'Anticipo simulado por %s. Referencia: %s.',
+            $this->paymentMethods()[$paymentMethod] ?? $paymentMethod,
+            $reference
+        );
+
+        return $baseNotes === ''
+            ? $paymentNote
+            : $baseNotes.' '.$paymentNote;
+    }
+
+    private function buildSchedules($businesses, array $dayOptions): array
+    {
+        return $businesses->mapWithKeys(function ($business) use ($dayOptions) {
+            return [
+                $business->id => $business->hours->map(function ($hour) use ($dayOptions) {
+                    return [
+                        'day' => $dayOptions[$hour->day_of_week] ?? 'Desconocido',
+                        'opens_at' => $hour->opens_at,
+                        'closes_at' => $hour->closes_at,
+                        'is_active' => $hour->is_active,
+                    ];
+                })->values()->all(),
+            ];
+        })->all();
     }
 }

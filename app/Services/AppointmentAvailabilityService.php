@@ -31,9 +31,14 @@ class AppointmentAvailabilityService
     // ======================================================================
     public function calculateEndTime(Service $service, string $startTime): string
     {
-        return Carbon::createFromFormat('H:i', $startTime)
+        return Carbon::parse($this->normalizeTime($startTime))
             ->addMinutes($service->duration_minutes)
             ->format('H:i');
+    }
+
+    public function normalizeTime(string $time): string
+    {
+        return substr(trim($time), 0, 5);
     }
 
     public function isWithinBusinessHours(Business $business, string $date, string $startTime, string $endTime): bool

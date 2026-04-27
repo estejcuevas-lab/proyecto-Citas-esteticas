@@ -155,7 +155,13 @@
                             <select id="service_id" name="service_id" required>
                                 <option value="">Selecciona un servicio</option>
                                 @foreach ($services as $service)
-                                    <option value="{{ $service->id }}" data-business-id="{{ $service->business_id }}" data-duration="{{ $service->duration_minutes }}" data-price="{{ $service->price }}" @selected(old('service_id') == $service->id)>
+                                    <option
+                                        value="{{ $service->id }}"
+                                        data-business-id="{{ $service->business_id }}"
+                                        data-duration="{{ $service->duration_minutes }}"
+                                        data-price="{{ $service->price }}"
+                                        @selected(old('service_id') == $service->id)
+                                    >
                                         {{ $service->name }} - {{ $service->business->name }}
                                     </option>
                                 @endforeach
@@ -171,20 +177,34 @@
                             <input id="start_time" name="start_time" type="time" value="{{ old('start_time') }}" required>
                         </div>
                         <div class="field">
-                            <label for="status">Estado</label>
-                            <select id="status" name="status" required>
-                                @foreach ($statuses as $status)
-                                    <option value="{{ $status }}" @selected(old('status', $user->isClient() ? 'pending' : 'confirmed') === $status)>{{ $status }}</option>
-                                @endforeach
-                            </select>
+                            @if ($user->isClient())
+                                <label>Estado inicial</label>
+                                <input type="text" value="pending" disabled>
+                                <input type="hidden" name="status" value="{{ old('status', 'pending') }}">
+                                <div class="hint">La cita se confirmará sola cuando completes el anticipo.</div>
+                            @else
+                                <label for="status">Estado</label>
+                                <select id="status" name="status" required>
+                                    @foreach ($statuses as $status)
+                                        <option value="{{ $status }}" @selected(old('status', 'confirmed') === $status)>{{ $status }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
                         </div>
                         <div class="field">
-                            <label for="payment_status">Estado del pago</label>
-                            <select id="payment_status" name="payment_status">
-                                @foreach ($paymentStatuses as $paymentStatus)
-                                    <option value="{{ $paymentStatus }}" @selected(old('payment_status', 'pending_advance') === $paymentStatus)>{{ $paymentStatus }}</option>
-                                @endforeach
-                            </select>
+                            @if ($user->isClient())
+                                <label>Anticipo</label>
+                                <input type="text" value="pending_advance" disabled>
+                                <input type="hidden" name="payment_status" value="{{ old('payment_status', 'pending_advance') }}">
+                                <div class="hint">Después de guardar, te llevaremos a una simulación de pago del 50%.</div>
+                            @else
+                                <label for="payment_status">Estado del pago</label>
+                                <select id="payment_status" name="payment_status">
+                                    @foreach ($paymentStatuses as $paymentStatus)
+                                        <option value="{{ $paymentStatus }}" @selected(old('payment_status', 'pending_advance') === $paymentStatus)>{{ $paymentStatus }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
                         </div>
                         <div class="field full">
                             <label for="notes">Notas</label>
@@ -219,6 +239,12 @@
                     <strong>Cálculo automático</strong>
                     <p class="muted">La hora final y el adelanto se proyectan con la duración y el precio del servicio seleccionado.</p>
                 </div>
+                @if ($user->isClient())
+                    <div class="note">
+                        <strong>Pago posterior</strong>
+                        <p class="muted">Cuando guardes la cita verás un botón para simular el pago del anticipo con Nequi, Bancolombia o tarjeta.</p>
+                    </div>
+                @endif
                 <div class="note">
                     <strong>Recomendación</strong>
                     <p class="muted">Selecciona primero el negocio y luego el servicio para ver una agenda consistente.</p>
@@ -234,66 +260,76 @@
     const scheduleBox = document.getElementById('business-schedule');
     const summaryBox = document.getElementById('appointment-summary');
     const serviceOptions = Array.from(serviceSelect.querySelectorAll('option[data-business-id]'));
-    const schedules = @json($businesses->mapWithKeys(function ($business) use ($dayOptions) {
-        return [
-            $business->id => $business->hours->map(function ($hour) use ($dayOptions) {
-                return [
-                    'day' => $dayOptions[$hour->day_of_week],
-                    'opens_at' => $hour->opens_at,
-                    'closes_at' => $hour->closes_at,
-                    'is_active' => $hour->is_active,
-                ];
-            })->values(),
-        ];
-    })->toArray());
+    const schedules = @json($schedules);
+
     function updateServices() {
         const selectedBusinessId = businessSelect.value;
         const currentServiceId = serviceSelect.value;
+
         serviceOptions.forEach((option) => {
             const visible = !selectedBusinessId || option.dataset.businessId === selectedBusinessId;
             option.hidden = !visible;
             option.disabled = !visible;
         });
+
         const selectedOption = serviceSelect.selectedOptions[0];
+
         if (!selectedOption || selectedOption.hidden) {
             serviceSelect.value = '';
         } else if (currentServiceId) {
             serviceSelect.value = currentServiceId;
         }
     }
+
     function updateSchedule() {
         const selectedBusinessId = businessSelect.value;
         const hours = schedules[selectedBusinessId] || [];
+
         if (!selectedBusinessId) {
             scheduleBox.textContent = 'Selecciona un negocio para ver sus horarios disponibles.';
             return;
         }
+
         if (!hours.length) {
             scheduleBox.textContent = 'Este negocio todavía no tiene horarios configurados.';
             return;
         }
+
         scheduleBox.innerHTML = hours.map((hour) => `${hour.day}: ${hour.is_active ? `${hour.opens_at} - ${hour.closes_at}` : 'No disponible'}`).join('<br>');
     }
+
     function updateSummary() {
         const selectedOption = serviceSelect.selectedOptions[0];
         const startTime = startTimeInput.value;
+
         if (!selectedOption || !selectedOption.dataset.duration || !startTime) {
             summaryBox.textContent = 'La hora de finalización se calcula automáticamente según la duración del servicio.';
             return;
         }
+
         const [hours, minutes] = startTime.split(':').map(Number);
         const duration = Number(selectedOption.dataset.duration);
         const price = Number(selectedOption.dataset.price || 0);
         const advanceAmount = (price * 0.5).toFixed(2);
         const date = new Date();
+
         date.setHours(hours, minutes + duration, 0, 0);
+
         const endHours = String(date.getHours()).padStart(2, '0');
         const endMinutes = String(date.getMinutes()).padStart(2, '0');
+
         summaryBox.textContent = `Duración del servicio: ${duration} minutos. Precio: $${price.toFixed(2)}. Adelanto requerido: $${advanceAmount}. Hora estimada de finalización: ${endHours}:${endMinutes}.`;
     }
-    businessSelect.addEventListener('change', () => { updateServices(); updateSchedule(); updateSummary(); });
+
+    businessSelect.addEventListener('change', () => {
+        updateServices();
+        updateSchedule();
+        updateSummary();
+    });
+
     serviceSelect.addEventListener('change', updateSummary);
     startTimeInput.addEventListener('input', updateSummary);
+
     updateServices();
     updateSchedule();
     updateSummary();

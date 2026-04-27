@@ -13,6 +13,7 @@ use App\Http\Controllers\BusinessHourController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\ServiceController;
+use App\Models\Business;
 use Illuminate\Support\Facades\Route;
 
 // ======================================================================
@@ -20,7 +21,18 @@ use Illuminate\Support\Facades\Route;
 // Las rutas separan la entrada HTTP de la logica manejada por controladores y vistas.
 // ======================================================================
 Route::get('/', function () {
-    return view('home');
+    $businesses = Business::query()
+        ->with([
+            'services' => fn ($query) => $query
+                ->where('active', true)
+                ->orderBy('name'),
+        ])
+        ->orderBy('name')
+        ->get();
+
+    return view('home', [
+        'businesses' => $businesses,
+    ]);
 })->name('home');
 
 Route::middleware('guest')->group(function () {
@@ -35,6 +47,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::post('/holidays/sync', [HolidayController::class, 'sync'])->name('holidays.sync');
     Route::resource('appointments', AppointmentController::class)->except(['show', 'destroy']);
+    Route::get('/appointments/{appointment}/payment', [AppointmentController::class, 'showPayment'])->name('appointments.payment.show');
+    Route::post('/appointments/{appointment}/payment', [AppointmentController::class, 'processPayment'])->name('appointments.payment.process');
     Route::patch('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus'])->name('appointments.status');
     Route::patch('/appointments/{appointment}/payment', [AppointmentController::class, 'updatePaymentStatus'])->name('appointments.payment');
     Route::resource('businesses', BusinessController::class)->except(['show', 'destroy']);

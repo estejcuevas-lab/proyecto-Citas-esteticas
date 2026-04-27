@@ -45,14 +45,22 @@ class StoreAppointmentRequest extends FormRequest
         // GUIA 4 - ACTIVIDAD 3: CAPA DE VALIDACION
         // La validacion prepara los datos antes de que pasen a la logica principal de agenda.
         // ======================================================================
+        $availability = app(AppointmentAvailabilityService::class);
+        $normalizedStartTime = $this->filled('start_time')
+            ? $availability->normalizeTime((string) $this->input('start_time'))
+            : null;
+
         $service = Service::query()->find($this->input('service_id'));
 
-        if ($service && $this->filled('start_time')) {
-            $endTime = app(AppointmentAvailabilityService::class)
-                ->calculateEndTime($service, $this->input('start_time'));
-
+        if ($normalizedStartTime !== null) {
             $this->merge([
-                'end_time' => $endTime,
+                'start_time' => $normalizedStartTime,
+            ]);
+        }
+
+        if ($service && $normalizedStartTime) {
+            $this->merge([
+                'end_time' => $availability->calculateEndTime($service, $normalizedStartTime),
             ]);
         }
     }

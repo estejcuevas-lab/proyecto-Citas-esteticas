@@ -124,6 +124,7 @@
         }
         button { background: linear-gradient(135deg, var(--brand), var(--brand-deep)); color: #fffaf5; }
         .button.secondary { background: var(--soft); color: var(--text); }
+        .button.payment { background: linear-gradient(135deg, #2f6b48, #245639); color: #fffaf5; }
         .info-card h2 { margin-top: 0; margin-bottom: .6rem; color: var(--brand-deep); }
         @media (max-width: 900px) {
             .layout, .grid { grid-template-columns: 1fr; }
@@ -168,7 +169,13 @@
                             <label for="service_id">Servicio</label>
                             <select id="service_id" name="service_id" required>
                                 @foreach ($services as $service)
-                                    <option value="{{ $service->id }}" data-business-id="{{ $service->business_id }}" data-duration="{{ $service->duration_minutes }}" data-price="{{ $service->price }}" @selected(old('service_id', $appointment->service_id) == $service->id)>
+                                    <option
+                                        value="{{ $service->id }}"
+                                        data-business-id="{{ $service->business_id }}"
+                                        data-duration="{{ $service->duration_minutes }}"
+                                        data-price="{{ $service->price }}"
+                                        @selected(old('service_id', $appointment->service_id) == $service->id)
+                                    >
                                         {{ $service->name }} - {{ $service->business->name }}
                                     </option>
                                 @endforeach
@@ -177,27 +184,41 @@
                         </div>
                         <div class="field">
                             <label for="appointment_date">Fecha</label>
-                            <input id="appointment_date" name="appointment_date" type="date" value="{{ old('appointment_date', $appointment->appointment_date) }}" required>
+                            <input id="appointment_date" name="appointment_date" type="date" value="{{ old('appointment_date', $appointment->appointment_date?->format('Y-m-d')) }}" required>
                         </div>
                         <div class="field">
                             <label for="start_time">Hora de inicio</label>
                             <input id="start_time" name="start_time" type="time" value="{{ old('start_time', $appointment->start_time) }}" required>
                         </div>
                         <div class="field">
-                            <label for="status">Estado</label>
-                            <select id="status" name="status" required>
-                                @foreach ($statuses as $status)
-                                    <option value="{{ $status }}" @selected(old('status', $appointment->status) === $status)>{{ $status }}</option>
-                                @endforeach
-                            </select>
+                            @if ($user->isClient())
+                                <label>Estado actual</label>
+                                <input type="text" value="{{ old('status', $appointment->status) }}" disabled>
+                                <input type="hidden" name="status" value="{{ old('status', $appointment->status) }}">
+                                <div class="hint">El sistema actualiza este estado cuando cancelas o pagas el anticipo.</div>
+                            @else
+                                <label for="status">Estado</label>
+                                <select id="status" name="status" required>
+                                    @foreach ($statuses as $status)
+                                        <option value="{{ $status }}" @selected(old('status', $appointment->status) === $status)>{{ $status }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
                         </div>
                         <div class="field">
-                            <label for="payment_status">Estado del pago</label>
-                            <select id="payment_status" name="payment_status">
-                                @foreach ($paymentStatuses as $paymentStatus)
-                                    <option value="{{ $paymentStatus }}" @selected(old('payment_status', $appointment->payment_status) === $paymentStatus)>{{ $paymentStatus }}</option>
-                                @endforeach
-                            </select>
+                            @if ($user->isClient())
+                                <label>Estado del pago</label>
+                                <input type="text" value="{{ old('payment_status', $appointment->payment_status) }}" disabled>
+                                <input type="hidden" name="payment_status" value="{{ old('payment_status', $appointment->payment_status) }}">
+                                <div class="hint">Si el anticipo sigue pendiente, puedes pagarlo desde el botón de abajo.</div>
+                            @else
+                                <label for="payment_status">Estado del pago</label>
+                                <select id="payment_status" name="payment_status">
+                                    @foreach ($paymentStatuses as $paymentStatus)
+                                        <option value="{{ $paymentStatus }}" @selected(old('payment_status', $appointment->payment_status) === $paymentStatus)>{{ $paymentStatus }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
                         </div>
                         <div class="field full">
                             <label for="notes">Notas</label>
@@ -217,6 +238,9 @@
 
                     <div class="button-row">
                         <button type="submit">Guardar cambios</button>
+                        @if ($user->isClient() && $appointment->payment_status !== 'paid' && ! $appointment->isClosed())
+                            <a class="button payment" href="{{ route('appointments.payment.show', $appointment) }}">Pagar anticipo</a>
+                        @endif
                         <a class="button secondary" href="{{ route('appointments.index') }}">Cancelar</a>
                     </div>
                 </form>
@@ -247,66 +271,76 @@
     const scheduleBox = document.getElementById('business-schedule');
     const summaryBox = document.getElementById('appointment-summary');
     const serviceOptions = Array.from(serviceSelect.querySelectorAll('option[data-business-id]'));
-    const schedules = @json($businesses->mapWithKeys(function ($business) use ($dayOptions) {
-        return [
-            $business->id => $business->hours->map(function ($hour) use ($dayOptions) {
-                return [
-                    'day' => $dayOptions[$hour->day_of_week],
-                    'opens_at' => $hour->opens_at,
-                    'closes_at' => $hour->closes_at,
-                    'is_active' => $hour->is_active,
-                ];
-            })->values(),
-        ];
-    })->toArray());
+    const schedules = @json($schedules);
+
     function updateServices() {
         const selectedBusinessId = businessSelect.value;
         const currentServiceId = serviceSelect.value;
+
         serviceOptions.forEach((option) => {
             const visible = !selectedBusinessId || option.dataset.businessId === selectedBusinessId;
             option.hidden = !visible;
             option.disabled = !visible;
         });
+
         const selectedOption = serviceSelect.querySelector(`option[value="${currentServiceId}"]`);
+
         if (!selectedOption || selectedOption.hidden) {
             serviceSelect.value = '';
         } else {
             serviceSelect.value = currentServiceId;
         }
     }
+
     function updateSchedule() {
         const selectedBusinessId = businessSelect.value;
         const hours = schedules[selectedBusinessId] || [];
+
         if (!selectedBusinessId) {
             scheduleBox.textContent = 'Selecciona un negocio para ver sus horarios disponibles.';
             return;
         }
+
         if (!hours.length) {
             scheduleBox.textContent = 'Este negocio todavía no tiene horarios configurados.';
             return;
         }
+
         scheduleBox.innerHTML = hours.map((hour) => `${hour.day}: ${hour.is_active ? `${hour.opens_at} - ${hour.closes_at}` : 'No disponible'}`).join('<br>');
     }
+
     function updateSummary() {
         const selectedOption = serviceSelect.selectedOptions[0];
         const startTime = startTimeInput.value;
+
         if (!selectedOption || !selectedOption.dataset.duration || !startTime) {
             summaryBox.textContent = 'La hora de finalización se recalcula automáticamente a partir de la hora inicial y la duración del servicio.';
             return;
         }
+
         const [hours, minutes] = startTime.split(':').map(Number);
         const duration = Number(selectedOption.dataset.duration);
         const price = Number(selectedOption.dataset.price || 0);
         const advanceAmount = (price * 0.5).toFixed(2);
         const date = new Date();
+
         date.setHours(hours, minutes + duration, 0, 0);
+
         const endHours = String(date.getHours()).padStart(2, '0');
         const endMinutes = String(date.getMinutes()).padStart(2, '0');
+
         summaryBox.textContent = `Duración del servicio: ${duration} minutos. Precio: $${price.toFixed(2)}. Adelanto requerido: $${advanceAmount}. Hora estimada de finalización: ${endHours}:${endMinutes}.`;
     }
-    businessSelect.addEventListener('change', () => { updateServices(); updateSchedule(); updateSummary(); });
+
+    businessSelect.addEventListener('change', () => {
+        updateServices();
+        updateSchedule();
+        updateSummary();
+    });
+
     serviceSelect.addEventListener('change', updateSummary);
     startTimeInput.addEventListener('input', updateSummary);
+
     updateServices();
     updateSchedule();
     updateSummary();

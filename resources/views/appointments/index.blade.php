@@ -202,6 +202,9 @@
 
                     <div class="actions">
                         <a class="button ghost" href="{{ route('appointments.edit', $appointment) }}">Editar</a>
+                        @if ($appointment->user_id === $user->id && $appointment->payment_status !== 'paid' && !in_array($appointment->status, ['cancelled', 'completed']))
+                            <a class="button info" href="{{ route('appointments.payment.show', $appointment) }}">Pagar anticipo</a>
+                        @endif
                         @if (($user->isAdmin() || $user->isBusiness()) && $appointment->status === 'pending')
                             <form method="POST" action="{{ route('appointments.status', $appointment) }}">
                                 @csrf
