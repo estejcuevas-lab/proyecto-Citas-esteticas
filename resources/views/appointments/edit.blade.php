@@ -247,16 +247,18 @@
     const scheduleBox = document.getElementById('business-schedule');
     const summaryBox = document.getElementById('appointment-summary');
     const serviceOptions = Array.from(serviceSelect.querySelectorAll('option[data-business-id]'));
-    const schedules = @json(
-        $businesses->mapWithKeys(fn ($business) => [
-            $business->id => $business->hours->map(fn ($hour) => [
-                'day' => $dayOptions[$hour->day_of_week],
-                'opens_at' => $hour->opens_at,
-                'closes_at' => $hour->closes_at,
-                'is_active' => $hour->is_active,
-            ])->values(),
-        ])
-    );
+    const schedules = @json($businesses->mapWithKeys(function ($business) use ($dayOptions) {
+        return [
+            $business->id => $business->hours->map(function ($hour) use ($dayOptions) {
+                return [
+                    'day' => $dayOptions[$hour->day_of_week],
+                    'opens_at' => $hour->opens_at,
+                    'closes_at' => $hour->closes_at,
+                    'is_active' => $hour->is_active,
+                ];
+            })->values(),
+        ];
+    })->toArray());
     function updateServices() {
         const selectedBusinessId = businessSelect.value;
         const currentServiceId = serviceSelect.value;
