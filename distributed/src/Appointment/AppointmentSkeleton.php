@@ -8,6 +8,7 @@
 namespace Distributed\Appointment;
 
 use Distributed\Dto\RemoteAppointment;
+use Distributed\Protocol\XmlAppointmentProtocol;
 use RuntimeException;
 
 class AppointmentSkeleton
@@ -17,12 +18,18 @@ class AppointmentSkeleton
     // El skeleton recibe el payload, reconstruye el objeto remoto y delega la logica al servicio de negocio.
     // ======================================================================
     public function __construct(
-        private readonly AppointmentService $service = new AppointmentService()
+        private readonly AppointmentService $service = new AppointmentService(),
+        private readonly XmlAppointmentProtocol $protocol = new XmlAppointmentProtocol()
     ) {
     }
 
-    public function handle(array $request): array
+    public function handle(string $requestXml): string
     {
+        // ======================================================================
+        // GUIA 8 - ACTIVIDAD 3: INTEGRACION DEL PROTOCOLO XML EN EL SISTEMA
+        // El servidor interpreta solicitudes XML y genera respuestas bajo el mismo formato estandarizado.
+        // ======================================================================
+        $request = $this->protocol->parseRequest($requestXml);
         $operation = $request['operation'] ?? null;
 
         if ($operation !== 'reserve_appointment') {
@@ -37,6 +44,9 @@ class AppointmentSkeleton
 
         $appointment = RemoteAppointment::fromArray($payload);
 
-        return $this->service->reserve($appointment);
+        return $this->protocol->buildResponse(
+            $operation,
+            $this->service->reserve($appointment)
+        );
     }
 }

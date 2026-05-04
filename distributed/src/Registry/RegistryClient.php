@@ -25,6 +25,10 @@ class RegistryClient
     public function bind(string $serviceName, string $host, int $port): void
     {
         // ======================================================================
+        // GUIA 9 - ACTIVIDAD 3: SIMULACION DE REGISTRO Y DESCUBRIMIENTO DE SERVICIOS
+        // El cliente publicador registra el servicio usando nombre logico y endpoint antes de exponerlo.
+        // ======================================================================
+        // ======================================================================
         // GUIA 6 - ACTIVIDAD 2: OPERACION BIND
         // Esta operacion publica la referencia fisica del servicio en el registro central.
         // ======================================================================
@@ -42,6 +46,10 @@ class RegistryClient
 
     public function lookup(string $serviceName): array
     {
+        // ======================================================================
+        // GUIA 9 - ACTIVIDAD 3: SIMULACION DE REGISTRO Y DESCUBRIMIENTO DE SERVICIOS
+        // Antes de consumir el servicio, el cliente consulta el directorio para resolver su ubicacion.
+        // ======================================================================
         $response = $this->send([
             'action' => 'LOOKUP',
             'service' => $serviceName,

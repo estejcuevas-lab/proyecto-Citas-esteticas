@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+========================================================================
+GUIA 9 - ACTIVIDAD 1: DEFINICION DEL CONTRATO DE SERVICIO (WSDL)
+Este contrato publica types, message, portType, binding y service
+para describir formalmente el servicio remoto del MVP.
+========================================================================
+-->
+<wsdl:definitions
+    name="AppointmentService"
+    targetNamespace="http://citas-app.local/soap/appointment-service"
+    xmlns:tns="http://citas-app.local/soap/appointment-service"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+
+    <!-- ================================================================== -->
+    <!-- GUIA 9 - ACTIVIDAD 1: DEFINICION DEL CONTRATO DE SERVICIO (WSDL) -->
+    <!-- Los types modelan la estructura del request, response y fault. -->
+    <!-- ================================================================== -->
+    <wsdl:types>
+        <xsd:schema targetNamespace="http://citas-app.local/soap/appointment-service" elementFormDefault="qualified">
+            <xsd:complexType name="RemoteAppointmentType">
+                <xsd:sequence>
+                    <xsd:element name="clientName" type="xsd:string"/>
+                    <xsd:element name="businessName" type="xsd:string"/>
+                    <xsd:element name="serviceName" type="xsd:string"/>
+                    <xsd:element name="appointmentDate" type="xsd:date"/>
+                    <xsd:element name="startTime" type="xsd:string"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="AppointmentResultType">
+                <xsd:sequence>
+                    <xsd:element name="status" type="xsd:string"/>
+                    <xsd:element name="message" type="xsd:string"/>
+                    <xsd:element name="appointment" type="tns:RemoteAppointmentType"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="ServiceFaultType">
+                <xsd:sequence>
+                    <xsd:element name="code" type="xsd:string"/>
+                    <xsd:element name="message" type="xsd:string"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:element name="reserveAppointmentRequest">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="appointment" type="tns:RemoteAppointmentType"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="reserveAppointmentResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="result" type="tns:AppointmentResultType"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="serviceFault">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="fault" type="tns:ServiceFaultType"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:schema>
+    </wsdl:types>
+
+    <!-- ================================================================== -->
+    <!-- GUIA 9 - ACTIVIDAD 1: DEFINICION DEL CONTRATO DE SERVICIO (WSDL) -->
+    <!-- Los message representan las entradas y salidas formales del servicio. -->
+    <!-- ================================================================== -->
+    <wsdl:message name="ReserveAppointmentInput">
+        <wsdl:part name="parameters" element="tns:reserveAppointmentRequest"/>
+    </wsdl:message>
+
+    <wsdl:message name="ReserveAppointmentOutput">
+        <wsdl:part name="parameters" element="tns:reserveAppointmentResponse"/>
+    </wsdl:message>
+
+    <wsdl:message name="ServiceFaultMessage">
+        <wsdl:part name="fault" element="tns:serviceFault"/>
+    </wsdl:message>
+
+    <!-- ================================================================== -->
+    <!-- GUIA 9 - ACTIVIDAD 1: DEFINICION DEL CONTRATO DE SERVICIO (WSDL) -->
+    <!-- El portType expone la operacion remota disponible para el cliente. -->
+    <!-- ================================================================== -->
+    <wsdl:portType name="AppointmentServicePortType">
+        <wsdl:operation name="reserveAppointment">
+            <wsdl:documentation>Registra una cita remota del MVP y devuelve la respuesta estructurada del servicio.</wsdl:documentation>
+            <wsdl:input message="tns:ReserveAppointmentInput"/>
+            <wsdl:output message="tns:ReserveAppointmentOutput"/>
+            <wsdl:fault name="ServiceFault" message="tns:ServiceFaultMessage"/>
+        </wsdl:operation>
+    </wsdl:portType>
+
+    <!-- ================================================================== -->
+    <!-- GUIA 9 - ACTIVIDAD 1: DEFINICION DEL CONTRATO DE SERVICIO (WSDL) -->
+    <!-- El binding fija SOAP sobre HTTP como protocolo de comunicacion. -->
+    <!-- ================================================================== -->
+    <wsdl:binding name="AppointmentServiceSoapBinding" type="tns:AppointmentServicePortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+        <wsdl:operation name="reserveAppointment">
+            <soap:operation soapAction="http://citas-app.local/soap/appointment-service/reserveAppointment" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="ServiceFault">
+                <soap:fault name="ServiceFault" use="literal"/>
+            </wsdl:fault>
+        </wsdl:operation>
+    </wsdl:binding>
+
+    <!-- ================================================================== -->
+    <!-- GUIA 9 - ACTIVIDAD 1: DEFINICION DEL CONTRATO DE SERVICIO (WSDL) -->
+    <!-- El service publica el endpoint consumible por clientes externos. -->
+    <!-- ================================================================== -->
+    <wsdl:service name="AppointmentService">
+        <wsdl:documentation>Servicio SOAP del MVP de citas esteticas.</wsdl:documentation>
+        <wsdl:port name="AppointmentServiceSoapPort" binding="tns:AppointmentServiceSoapBinding">
+            <soap:address location="http://127.0.0.1:9200/soap-service.php"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

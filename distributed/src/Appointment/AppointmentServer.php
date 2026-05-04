@@ -7,6 +7,7 @@
 
 namespace Distributed\Appointment;
 
+use Distributed\Protocol\XmlAppointmentProtocol;
 use Distributed\Registry\RegistryClient;
 use Distributed\Support\SocketTransport;
 use RuntimeException;
@@ -22,7 +23,8 @@ class AppointmentServer
         private readonly string $host,
         private readonly int $port,
         private readonly RegistryClient $registryClient,
-        private readonly AppointmentSkeleton $skeleton = new AppointmentSkeleton()
+        private readonly AppointmentSkeleton $skeleton = new AppointmentSkeleton(),
+        private readonly XmlAppointmentProtocol $protocol = new XmlAppointmentProtocol()
     ) {
     }
 
@@ -42,14 +44,18 @@ class AppointmentServer
             }
 
             try {
-                $request = SocketTransport::readMessage($client);
+                // ======================================================================
+                // GUIA 8 - ACTIVIDAD 3: INTEGRACION DEL PROTOCOLO XML EN EL SISTEMA
+                // El servidor recibe XML desde el socket, lo procesa y devuelve XML como respuesta oficial del protocolo.
+                // ======================================================================
+                $request = SocketTransport::readRawMessage($client);
                 $response = $this->skeleton->handle($request);
-                SocketTransport::writeMessage($client, $response);
+                SocketTransport::writeRawMessage($client, $response);
             } catch (RuntimeException $exception) {
-                SocketTransport::writeMessage($client, [
-                    'status' => 'error',
-                    'message' => $exception->getMessage(),
-                ]);
+                SocketTransport::writeRawMessage(
+                    $client,
+                    $this->protocol->buildError('reserve_appointment', $exception->getMessage())
+                );
             } finally {
                 SocketTransport::close($client);
             }

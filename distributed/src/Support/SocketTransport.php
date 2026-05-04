@@ -89,6 +89,34 @@ class SocketTransport
         return $message;
     }
 
+    public static function writeRawMessage(\Socket $socket, string $payload): void
+    {
+        // ======================================================================
+        // GUIA 8 - ACTIVIDAD 3: INTEGRACION DEL PROTOCOLO XML EN EL SISTEMA
+        // El transporte envia el XML completo como canal oficial de intercambio entre cliente y servidor.
+        // ======================================================================
+        $buffer = $payload."\n";
+
+        if (@socket_write($socket, $buffer, strlen($buffer)) === false) {
+            throw new RuntimeException('No fue posible escribir el mensaje XML en el socket.');
+        }
+    }
+
+    public static function readRawMessage(\Socket $socket): string
+    {
+        // ======================================================================
+        // GUIA 8 - ACTIVIDAD 3: INTEGRACION DEL PROTOCOLO XML EN EL SISTEMA
+        // El transporte recupera el mensaje XML bruto antes de validarlo y procesarlo en capas superiores.
+        // ======================================================================
+        $payload = trim((string) @socket_read($socket, 8192, PHP_NORMAL_READ));
+
+        if ($payload === '') {
+            throw new RuntimeException('No se recibio mensaje XML desde el socket.');
+        }
+
+        return $payload;
+    }
+
     public static function close(\Socket $socket): void
     {
         @socket_close($socket);
