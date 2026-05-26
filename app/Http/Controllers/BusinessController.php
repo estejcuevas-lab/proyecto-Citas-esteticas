@@ -8,6 +8,7 @@ use App\Models\Business;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class BusinessController extends Controller
 {
@@ -34,7 +35,11 @@ class BusinessController extends Controller
 
     public function store(StoreBusinessRequest $request): RedirectResponse
     {
-        $business = $request->user()->businesses()->create($request->validated());
+        $payload = $request->validated();
+        $payload['slug'] = $this->generateUniqueSlug($payload['slug'] ?? $payload['name']);
+        $payload['primary_color'] ??= '#994b35';
+
+        $business = $request->user()->businesses()->create($payload);
 
         return redirect()
             ->route('businesses.edit', $business)
@@ -54,7 +59,11 @@ class BusinessController extends Controller
     {
         $this->ensureBusinessOwnership($request, $business);
 
-        $business->update($request->validated());
+        $payload = $request->validated();
+        $payload['slug'] = $this->generateUniqueSlug($payload['slug'] ?? $payload['name'], $business);
+        $payload['primary_color'] ??= '#994b35';
+
+        $business->update($payload);
 
         return redirect()
             ->route('businesses.edit', $business)
@@ -64,7 +73,7 @@ class BusinessController extends Controller
     private function ensureBusinessAccess(Request $request): void
     {
         abort_unless(
-            $request->user()?->isBusiness() || $request->user()?->isAdmin(),
+            $request->user()?->canManageBusinesses(),
             403,
             'Solo los negocios o administradores pueden gestionar negocios.'
         );
@@ -79,5 +88,25 @@ class BusinessController extends Controller
             403,
             'No puedes modificar un negocio que no te pertenece.'
         );
+    }
+
+    private function generateUniqueSlug(string $value, ?Business $business = null): string
+    {
+        $baseSlug = Str::slug($value) ?: 'negocio';
+        $slug = $baseSlug;
+        $suffix = 2;
+
+        $query = Business::query();
+
+        if ($business) {
+            $query->whereKeyNot($business->id);
+        }
+
+        while ((clone $query)->where('slug', $slug)->exists()) {
+            $slug = "{$baseSlug}-{$suffix}";
+            $suffix++;
+        }
+
+        return $slug;
     }
 }

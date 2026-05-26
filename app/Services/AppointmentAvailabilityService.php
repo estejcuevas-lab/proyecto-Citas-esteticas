@@ -22,8 +22,7 @@ class AppointmentAvailabilityService
     public function __construct(
         private readonly AppointmentRepository $appointmentRepository,
         private readonly HolidayRepository $holidayRepository
-    ) {
-    }
+    ) {}
 
     // ======================================================================
     // GUIA 2 - ACTIVIDAD 3: ESTRUCTURA DE CAPAS
@@ -31,7 +30,7 @@ class AppointmentAvailabilityService
     // ======================================================================
     public function calculateEndTime(Service $service, string $startTime): string
     {
-        return Carbon::parse($this->normalizeTime($startTime))
+        return Carbon::createFromFormat('H:i', $this->normalizeTime($startTime))
             ->addMinutes($service->duration_minutes)
             ->format('H:i');
     }
@@ -41,13 +40,18 @@ class AppointmentAvailabilityService
         return substr(trim($time), 0, 5);
     }
 
-    public function isWithinBusinessHours(Business $business, string $date, string $startTime, string $endTime): bool
-    {
+    public function isWithinBusinessHours(
+        Business $business,
+        string $date,
+        string $startTime,
+        string $endTime,
+        bool $checkHoliday = true
+    ): bool {
         // ======================================================================
         // GUIA 2 - ACTIVIDAD 4: INTEGRACION INICIAL
         // Aqui se verifica la conexion funcional entre datos del negocio, horarios y agenda.
         // ======================================================================
-        if ($this->isHoliday($date)) {
+        if ($checkHoliday && $this->isHoliday($date)) {
             return false;
         }
 
@@ -62,7 +66,8 @@ class AppointmentAvailabilityService
             return false;
         }
 
-        return $startTime >= $businessHour->opens_at && $endTime <= $businessHour->closes_at;
+        return $this->toMinutes($startTime) >= $this->toMinutes($businessHour->opens_at)
+            && $this->toMinutes($endTime) <= $this->toMinutes($businessHour->closes_at);
     }
 
     public function isHoliday(string $date, string $countryCode = 'CO'): bool
@@ -92,5 +97,12 @@ class AppointmentAvailabilityService
             $endTime,
             $ignoreAppointmentId
         );
+    }
+
+    private function toMinutes(string $time): int
+    {
+        [$hours, $minutes] = array_map('intval', explode(':', $this->normalizeTime($time)));
+
+        return ($hours * 60) + $minutes;
     }
 }

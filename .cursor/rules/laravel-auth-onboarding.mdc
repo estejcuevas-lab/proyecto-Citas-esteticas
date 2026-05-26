@@ -1,0 +1,14 @@
+---
+description: Laravel auth, roles and onboarding flow
+alwaysApply: true
+---
+
+# Laravel Auth Flow
+
+- Treat `admin`, `business`, and `client` as the only valid roles.
+- Keep Google OAuth as the primary sign-in path and preserve email/password only as a fallback.
+- New social sign-ins default to `client` unless an explicit business-access flow promotes them.
+- Do not let public signup self-assign a business account without an approval step.
+- Gate incomplete users with onboarding middleware before dashboard or booking flows.
+- Gate unapproved business users before any business management routes.
+- Prefer focused feature tests for redirects, middleware, and role transitions whenever auth changes.

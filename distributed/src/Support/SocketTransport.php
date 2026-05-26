@@ -80,7 +80,7 @@ class SocketTransport
             throw new RuntimeException('No se recibio payload desde el socket.');
         }
 
-        $message = @unserialize($payload);
+        $message = @unserialize($payload, ['allowed_classes' => false]);
 
         if (! is_array($message)) {
             throw new RuntimeException('No fue posible reconstruir el mensaje remoto.');

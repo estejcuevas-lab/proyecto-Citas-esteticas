@@ -22,12 +22,21 @@ class Business extends Model
     // ======================================================================
     protected $fillable = [
         'name',
+        'slug',
         'type',
         'phone',
         'email',
         'address',
+        'primary_color',
         'user_id',
     ];
+
+    public function brandColor(): string
+    {
+        return preg_match('/^#[0-9a-fA-F]{6}$/', (string) $this->primary_color)
+            ? $this->primary_color
+            : '#994b35';
+    }
 
     public function user(): BelongsTo
     {

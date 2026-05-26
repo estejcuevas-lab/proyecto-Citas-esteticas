@@ -27,9 +27,16 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'phone' => fake()->phoneNumber(),
             'email_verified_at' => now(),
             'role' => User::ROLE_CLIENT,
             'password' => static::$password ??= Hash::make('password'),
+            'avatar' => null,
+            'auth_provider' => null,
+            'provider_id' => null,
+            'profile_completed_at' => now(),
+            'business_requested_at' => null,
+            'business_approved_at' => null,
             'remember_token' => Str::random(10),
         ];
     }
@@ -55,6 +62,8 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'role' => User::ROLE_BUSINESS,
+            'business_requested_at' => now(),
+            'business_approved_at' => now(),
         ]);
     }
 

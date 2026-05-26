@@ -8,15 +8,23 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\AuthRedirect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
+        if (Auth::check()) {
+            return redirect()->route(AuthRedirect::routeFor(Auth::user()));
+        }
+
         return view('auth.login');
     }
 
@@ -31,17 +39,20 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        $this->ensureIsNotRateLimited($request);
+
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()
-                ->withErrors([
-                    'email' => 'Las credenciales no son validas.',
-                ])
-                ->onlyInput('email');
+            RateLimiter::hit($this->throttleKey($request));
+
+            throw ValidationException::withMessages([
+                'email' => 'Las credenciales no son validas.',
+            ]);
         }
 
+        RateLimiter::clear($this->throttleKey($request));
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(route(AuthRedirect::routeFor($request->user())));
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -52,5 +63,23 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('home');
+    }
+
+    private function ensureIsNotRateLimited(Request $request): void
+    {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey($request), 5)) {
+            return;
+        }
+
+        $seconds = RateLimiter::availableIn($this->throttleKey($request));
+
+        throw ValidationException::withMessages([
+            'email' => "Demasiados intentos de acceso. Intenta de nuevo en {$seconds} segundos.",
+        ]);
+    }
+
+    private function throttleKey(Request $request): string
+    {
+        return Str::transliterate(Str::lower((string) $request->input('email')).'|'.$request->ip());
     }
 }

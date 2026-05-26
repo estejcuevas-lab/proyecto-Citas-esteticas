@@ -1,121 +1,83 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Crear negocio</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f7f2ec;
-            color: #2a211c;
-        }
+@extends('layouts.app')
 
-        .shell {
-            min-height: 100vh;
-            padding: 2rem;
-        }
+@section('title', 'Crear negocio')
 
-        .panel {
-            max-width: 720px;
-            margin: 0 auto;
-            background: #fff;
-            border: 1px solid #dccab8;
-            border-radius: 20px;
-            padding: 2rem;
-        }
+@section('content')
+    <section class="surface" style="max-width: 900px; margin: 0 auto;">
+        <div class="grid">
+            <div>
+                <span class="eyebrow">Nuevo negocio</span>
+                <h1 class="page-title">Crea un negocio listo para branding y pagina publica.</h1>
+                <p class="muted">
+                    Define el slug publico y el color principal desde el inicio para que la landing del negocio
+                    salga alineada con su futura identidad visual.
+                </p>
+            </div>
 
-        label, input, select {
-            display: block;
-            width: 100%;
-        }
+            <section class="card">
+                <form method="POST" action="{{ route('businesses.store') }}">
+                    @csrf
 
-        label {
-            margin-top: 1rem;
-            margin-bottom: 0.45rem;
-            font-weight: 700;
-        }
+                    <div class="field-list">
+                        <label for="name">
+                            Nombre del negocio
+                            <input id="name" name="name" type="text" value="{{ old('name') }}" required>
+                        </label>
 
-        input, select {
-            box-sizing: border-box;
-            padding: 0.85rem 1rem;
-            border-radius: 12px;
-            border: 1px solid #bca58f;
-        }
+                        <div class="two-col">
+                            <label for="slug">
+                                Slug publico
+                                <input id="slug" name="slug" type="text" value="{{ old('slug') }}" placeholder="mi-negocio">
+                            </label>
 
-        .actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
+                            <label for="primary_color">
+                                Color principal
+                                <input id="primary_color" name="primary_color" type="text" value="{{ old('primary_color', '#994b35') }}" placeholder="#994b35">
+                            </label>
+                        </div>
 
-        .button, button {
-            display: inline-block;
-            text-decoration: none;
-            padding: 0.9rem 1rem;
-            border-radius: 12px;
-            border: 0;
-            background: #6a4730;
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-        }
+                        <label for="type">
+                            Tipo de negocio
+                            <select id="type" name="type" required>
+                                <option value="barberia" @selected(old('type') === 'barberia')>Barberia</option>
+                                <option value="estetica" @selected(old('type') === 'estetica')>Estetica</option>
+                                <option value="odontologia" @selected(old('type') === 'odontologia')>Odontologia</option>
+                                <option value="consultorio" @selected(old('type') === 'consultorio')>Consultorio</option>
+                            </select>
+                        </label>
 
-        .secondary {
-            background: #efe1d4;
-            color: #2a211c;
-        }
+                        <div class="two-col">
+                            <label for="email">
+                                Correo
+                                <input id="email" name="email" type="email" value="{{ old('email') }}">
+                            </label>
 
-        .error-list {
-            margin-top: 1rem;
-            color: #a11a1a;
-        }
-    </style>
-</head>
-<body>
-    <main class="shell">
-        <section class="panel">
-            <h1>Crear negocio</h1>
-            <p>Esta pantalla forma parte del flujo cliente-servidor para registrar informacion del negocio.</p>
+                            <label for="phone">
+                                Telefono
+                                <input id="phone" name="phone" type="text" value="{{ old('phone') }}">
+                            </label>
+                        </div>
 
-            <form method="POST" action="{{ route('businesses.store') }}">
-                @csrf
-
-                <label for="name">Nombre del negocio</label>
-                <input id="name" name="name" type="text" value="{{ old('name') }}" required>
-
-                <label for="type">Tipo de negocio</label>
-                <select id="type" name="type" required>
-                    <option value="barberia" @selected(old('type') === 'barberia')>Barberia</option>
-                    <option value="estetica" @selected(old('type') === 'estetica')>Estetica</option>
-                    <option value="odontologia" @selected(old('type') === 'odontologia')>Odontologia</option>
-                    <option value="consultorio" @selected(old('type') === 'consultorio')>Consultorio</option>
-                </select>
-
-                <label for="email">Correo</label>
-                <input id="email" name="email" type="email" value="{{ old('email') }}">
-
-                <label for="phone">Telefono</label>
-                <input id="phone" name="phone" type="text" value="{{ old('phone') }}">
-
-                <label for="address">Direccion</label>
-                <input id="address" name="address" type="text" value="{{ old('address') }}">
-
-                @if ($errors->any())
-                    <div class="error-list">
-                        @foreach ($errors->all() as $error)
-                            <div>{{ $error }}</div>
-                        @endforeach
+                        <label for="address">
+                            Direccion
+                            <input id="address" name="address" type="text" value="{{ old('address') }}">
+                        </label>
                     </div>
-                @endif
 
-                <div class="actions">
-                    <button type="submit">Guardar negocio</button>
-                    <a class="button secondary" href="{{ route('businesses.index') }}">Cancelar</a>
-                </div>
-            </form>
-        </section>
-    </main>
-</body>
-</html>
+                    @if ($errors->any())
+                        <div class="flash flash-error" style="margin-top: 1rem;">
+                            @foreach ($errors->all() as $error)
+                                <div>{{ $error }}</div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <div class="actions" style="margin-top: 1.25rem;">
+                        <button class="btn btn-primary" type="submit">Guardar negocio</button>
+                        <a class="btn btn-secondary" href="{{ route('businesses.index') }}">Cancelar</a>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </section>
+@endsection

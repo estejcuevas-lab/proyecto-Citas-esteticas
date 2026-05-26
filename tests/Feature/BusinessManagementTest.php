@@ -25,6 +25,7 @@ class BusinessManagementTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('businesses', [
             'name' => 'Barberia Central',
+            'slug' => 'barberia-central',
             'user_id' => $user->id,
         ]);
     }
@@ -42,5 +43,25 @@ class BusinessManagementTest extends TestCase
         $this->assertDatabaseMissing('businesses', [
             'name' => 'Negocio Prohibido',
         ]);
+    }
+
+    public function test_public_business_page_is_available_by_slug(): void
+    {
+        $user = User::factory()->business()->create();
+
+        $business = $user->businesses()->create([
+            'name' => 'Estetica Serena',
+            'slug' => 'estetica-serena',
+            'type' => 'estetica',
+            'phone' => '3001234567',
+            'email' => 'serena@example.com',
+            'address' => 'Calle 12',
+            'primary_color' => '#994b35',
+        ]);
+
+        $response = $this->get('/negocios/'.$business->slug);
+
+        $response->assertOk();
+        $response->assertSee('Estetica Serena');
     }
 }

@@ -1,132 +1,108 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Editar negocio</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f7f2ec;
-            color: #2a211c;
-        }
+@extends('layouts.app')
 
-        .shell {
-            min-height: 100vh;
-            padding: 2rem;
-        }
+@section('title', 'Editar negocio')
+@section('theme_style', '--primary-color: '.old('primary_color', $business->brandColor()).'; --primary-color-deep: #6a2d1e; --primary-soft: #f1e3d7;')
 
-        .panel {
-            max-width: 720px;
-            margin: 0 auto;
-            background: #fff;
-            border: 1px solid #dccab8;
-            border-radius: 20px;
-            padding: 2rem;
-        }
+@section('content')
+    <section class="surface" style="max-width: 960px; margin: 0 auto;">
+        <div class="hero-grid">
+            <article class="card">
+                <span class="eyebrow">Branding y datos base</span>
+                <h1 class="page-title">{{ $business->name }}</h1>
+                <p class="muted">
+                    Ajusta identidad visual, slug publico y canales de contacto para que la pagina del negocio
+                    sea clara tanto para clientes como para la operacion interna.
+                </p>
 
-        label, input, select {
-            display: block;
-            width: 100%;
-        }
+                <div class="meta-grid" style="margin-top: 1.25rem;">
+                    <div class="meta-box">
+                        <span>Slug actual</span>
+                        {{ $business->slug ?: 'Pendiente de generar' }}
+                    </div>
+                    <div class="meta-box">
+                        <span>Color principal</span>
+                        {{ $business->brandColor() }}
+                    </div>
+                    <div class="meta-box">
+                        <span>Pagina publica</span>
+                        <a href="{{ route('public.businesses.show', ['business' => $business->slug]) }}" target="_blank">Abrir pagina</a>
+                    </div>
+                </div>
+            </article>
 
-        label {
-            margin-top: 1rem;
-            margin-bottom: 0.45rem;
-            font-weight: 700;
-        }
+            <aside class="card card-accent">
+                <span class="eyebrow" style="background: rgba(255, 250, 245, 0.18); color: #fffaf5;">Preview rapido</span>
+                <h2 class="section-title" style="margin-top: 0.9rem;">{{ $business->name }}</h2>
+                <p class="muted" style="margin-top: 0.75rem;">
+                    Este bloque usa el color activo del negocio para anticipar como se sentira la pagina publica.
+                </p>
+            </aside>
+        </div>
 
-        input, select {
-            box-sizing: border-box;
-            padding: 0.85rem 1rem;
-            border-radius: 12px;
-            border: 1px solid #bca58f;
-        }
-
-        .actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .button, button {
-            display: inline-block;
-            text-decoration: none;
-            padding: 0.9rem 1rem;
-            border-radius: 12px;
-            border: 0;
-            background: #6a4730;
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .secondary {
-            background: #efe1d4;
-            color: #2a211c;
-        }
-
-        .status {
-            margin-top: 1rem;
-            color: #1f6b36;
-            font-weight: 700;
-        }
-
-        .error-list {
-            margin-top: 1rem;
-            color: #a11a1a;
-        }
-    </style>
-</head>
-<body>
-    <main class="shell">
-        <section class="panel">
-            <h1>Editar negocio</h1>
-            <p>Actualiza la informacion base del negocio para seguir construyendo agenda, servicios y citas.</p>
-
-            @if (session('status'))
-                <div class="status">{{ session('status') }}</div>
-            @endif
-
+        <section class="card" style="margin-top: 1.5rem;">
             <form method="POST" action="{{ route('businesses.update', $business) }}">
                 @csrf
                 @method('PUT')
 
-                <label for="name">Nombre del negocio</label>
-                <input id="name" name="name" type="text" value="{{ old('name', $business->name) }}" required>
+                <div class="field-list">
+                    <label for="name">
+                        Nombre del negocio
+                        <input id="name" name="name" type="text" value="{{ old('name', $business->name) }}" required>
+                    </label>
 
-                <label for="type">Tipo de negocio</label>
-                <select id="type" name="type" required>
-                    <option value="barberia" @selected(old('type', $business->type) === 'barberia')>Barberia</option>
-                    <option value="estetica" @selected(old('type', $business->type) === 'estetica')>Estetica</option>
-                    <option value="odontologia" @selected(old('type', $business->type) === 'odontologia')>Odontologia</option>
-                    <option value="consultorio" @selected(old('type', $business->type) === 'consultorio')>Consultorio</option>
-                </select>
+                    <div class="two-col">
+                        <label for="slug">
+                            Slug publico
+                            <input id="slug" name="slug" type="text" value="{{ old('slug', $business->slug) }}" required>
+                        </label>
 
-                <label for="email">Correo</label>
-                <input id="email" name="email" type="email" value="{{ old('email', $business->email) }}">
+                        <label for="primary_color">
+                            Color principal
+                            <input id="primary_color" name="primary_color" type="text" value="{{ old('primary_color', $business->brandColor()) }}" required>
+                        </label>
+                    </div>
 
-                <label for="phone">Telefono</label>
-                <input id="phone" name="phone" type="text" value="{{ old('phone', $business->phone) }}">
+                    <label for="type">
+                        Tipo de negocio
+                        <select id="type" name="type" required>
+                            <option value="barberia" @selected(old('type', $business->type) === 'barberia')>Barberia</option>
+                            <option value="estetica" @selected(old('type', $business->type) === 'estetica')>Estetica</option>
+                            <option value="odontologia" @selected(old('type', $business->type) === 'odontologia')>Odontologia</option>
+                            <option value="consultorio" @selected(old('type', $business->type) === 'consultorio')>Consultorio</option>
+                        </select>
+                    </label>
 
-                <label for="address">Direccion</label>
-                <input id="address" name="address" type="text" value="{{ old('address', $business->address) }}">
+                    <div class="two-col">
+                        <label for="email">
+                            Correo
+                            <input id="email" name="email" type="email" value="{{ old('email', $business->email) }}">
+                        </label>
+
+                        <label for="phone">
+                            Telefono
+                            <input id="phone" name="phone" type="text" value="{{ old('phone', $business->phone) }}">
+                        </label>
+                    </div>
+
+                    <label for="address">
+                        Direccion
+                        <input id="address" name="address" type="text" value="{{ old('address', $business->address) }}">
+                    </label>
+                </div>
 
                 @if ($errors->any())
-                    <div class="error-list">
+                    <div class="flash flash-error" style="margin-top: 1rem;">
                         @foreach ($errors->all() as $error)
                             <div>{{ $error }}</div>
                         @endforeach
                     </div>
                 @endif
 
-                <div class="actions">
-                    <button type="submit">Guardar cambios</button>
-                    <a class="button secondary" href="{{ route('businesses.index') }}">Volver al listado</a>
+                <div class="actions" style="margin-top: 1.25rem;">
+                    <button class="btn btn-primary" type="submit">Guardar cambios</button>
+                    <a class="btn btn-secondary" href="{{ route('businesses.index') }}">Volver al listado</a>
                 </div>
             </form>
         </section>
-    </main>
-</body>
-</html>
+    </section>
+@endsection

@@ -26,8 +26,15 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'role',
         'password',
+        'avatar',
+        'auth_provider',
+        'provider_id',
+        'profile_completed_at',
+        'business_requested_at',
+        'business_approved_at',
     ];
 
     /**
@@ -50,6 +57,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'profile_completed_at' => 'datetime',
+            'business_requested_at' => 'datetime',
+            'business_approved_at' => 'datetime',
         ];
     }
 
@@ -76,5 +86,35 @@ class User extends Authenticatable
     public function isClient(): bool
     {
         return $this->role === self::ROLE_CLIENT;
+    }
+
+    public function hasCompletedProfile(): bool
+    {
+        return $this->profile_completed_at !== null;
+    }
+
+    public function isBusinessApproved(): bool
+    {
+        return $this->isBusiness() && $this->business_approved_at !== null;
+    }
+
+    public function hasPendingBusinessRequest(): bool
+    {
+        return $this->business_requested_at !== null && $this->business_approved_at === null;
+    }
+
+    public function needsProfileCompletion(): bool
+    {
+        return ! $this->isAdmin() && ! $this->hasCompletedProfile();
+    }
+
+    public function needsBusinessApproval(): bool
+    {
+        return $this->isBusiness() && ! $this->isBusinessApproved();
+    }
+
+    public function canManageBusinesses(): bool
+    {
+        return $this->isAdmin() || $this->isBusinessApproved();
     }
 }

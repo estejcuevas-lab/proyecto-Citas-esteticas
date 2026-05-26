@@ -1,106 +1,60 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Registro</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f3ede6;
-            color: #2a211c;
-        }
+@extends('layouts.app')
 
-        .wrap {
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            padding: 2rem;
-        }
+@section('title', 'Registro de cliente')
 
-        .panel {
-            width: min(520px, 100%);
-            background: #fffaf5;
-            border: 1px solid #d6c1ad;
-            border-radius: 18px;
-            padding: 2rem;
-        }
+@section('content')
+    <section class="surface" style="max-width: 760px; margin: 0 auto;">
+        <div class="grid">
+            <div>
+                <span class="eyebrow">Cuenta cliente</span>
+                <h1 class="page-title">Crea una cuenta manual para cliente.</h1>
+                <p class="muted">
+                    El registro clasico queda orientado a clientes. Si quieres administrar un negocio,
+                    la ruta recomendada es entrar con Google y luego solicitar acceso business desde tu panel.
+                </p>
+            </div>
 
-        label, input, select {
-            display: block;
-            width: 100%;
-        }
+            <section class="card">
+                <form method="POST" action="{{ route('register') }}">
+                    @csrf
 
-        label {
-            margin-top: 1rem;
-            margin-bottom: 0.45rem;
-            font-weight: 700;
-        }
+                    <div class="field-list">
+                        <label for="name">
+                            Nombre
+                            <input id="name" name="name" type="text" value="{{ old('name') }}" required>
+                        </label>
 
-        input, select {
-            box-sizing: border-box;
-            padding: 0.85rem 1rem;
-            border-radius: 12px;
-            border: 1px solid #bca58f;
-        }
+                        <label for="email">
+                            Correo electronico
+                            <input id="email" name="email" type="email" value="{{ old('email') }}" required>
+                        </label>
 
-        .submit {
-            margin-top: 1.5rem;
-            width: 100%;
-            padding: 0.95rem 1rem;
-            border: 0;
-            border-radius: 12px;
-            background: #6a4730;
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-        }
+                        <label for="password">
+                            Contrasena
+                            <input id="password" name="password" type="password" required>
+                        </label>
 
-        .error-list {
-            margin-top: 1rem;
-            color: #a11a1a;
-        }
-    </style>
-</head>
-<body>
-    <main class="wrap">
-        <section class="panel">
-            <h1>Crear cuenta</h1>
-            <p>Selecciona el perfil con el que vas a usar el sistema.</p>
-
-            <form method="POST" action="{{ route('register') }}">
-                @csrf
-
-                <label for="name">Nombre</label>
-                <input id="name" name="name" type="text" value="{{ old('name') }}" required>
-
-                <label for="email">Correo electronico</label>
-                <input id="email" name="email" type="email" value="{{ old('email') }}" required>
-
-                <label for="role">Rol</label>
-                <select id="role" name="role" required>
-                    <option value="client" @selected(old('role') === 'client')>Cliente</option>
-                    <option value="business" @selected(old('role') === 'business')>Negocio</option>
-                </select>
-
-                <label for="password">Contrasena</label>
-                <input id="password" name="password" type="password" required>
-
-                <label for="password_confirmation">Confirmar contrasena</label>
-                <input id="password_confirmation" name="password_confirmation" type="password" required>
-
-                @if ($errors->any())
-                    <div class="error-list">
-                        @foreach ($errors->all() as $error)
-                            <div>{{ $error }}</div>
-                        @endforeach
+                        <label for="password_confirmation">
+                            Confirmar contrasena
+                            <input id="password_confirmation" name="password_confirmation" type="password" required>
+                        </label>
                     </div>
-                @endif
 
-                <button class="submit" type="submit">Registrarme</button>
-            </form>
-        </section>
-    </main>
-</body>
-</html>
+                    @if ($errors->any())
+                        <div class="flash flash-error" style="margin-top: 1rem;">
+                            @foreach ($errors->all() as $error)
+                                <div>{{ $error }}</div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <div class="actions" style="margin-top: 1.25rem;">
+                        <button class="btn btn-primary" type="submit">Registrarme</button>
+                        <a class="btn btn-secondary" href="{{ route('auth.google.redirect') }}">Continuar con Google</a>
+                        <a class="btn btn-secondary" href="{{ route('login') }}">Ya tengo cuenta</a>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </section>
+@endsection

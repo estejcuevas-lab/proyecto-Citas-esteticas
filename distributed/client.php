@@ -48,7 +48,12 @@ $appointment = new RemoteAppointment(
 // GUIA 5 - ACTIVIDAD 3: MARSHALLING
 // El objeto se convierte en payload serializable para su transporte por red dentro del stub.
 // ======================================================================
-$response = $stub->reserveAppointmentDetailed($appointment);
+try {
+    $response = $stub->reserveAppointmentDetailed($appointment);
+} catch (\Exception $e) {
+    echo "[CLIENT ERROR] No se pudo conectar con el servicio remoto: " . $e->getMessage() . "\n";
+    exit(1);
+}
 
 // ======================================================================
 // GUIA 8 - ACTIVIDAD 5: TRANSFORMACION DE DATOS CON XSLT

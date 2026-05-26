@@ -9,6 +9,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AuthRedirect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,21 +33,27 @@ class RegisteredUserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
-            'role' => ['required', 'in:'.implode(',', [User::ROLE_CLIENT, User::ROLE_BUSINESS])],
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'role' => $validated['role'],
+            'phone' => null,
+            'role' => User::ROLE_CLIENT,
             'password' => Hash::make($validated['password']),
+            'avatar' => null,
+            'auth_provider' => null,
+            'provider_id' => null,
+            'profile_completed_at' => null,
+            'business_requested_at' => null,
+            'business_approved_at' => null,
         ]);
 
         Auth::login($user);
 
         $request->session()->regenerate();
 
-        return redirect()->route('dashboard');
+        return redirect()->route(AuthRedirect::routeFor($user));
     }
 }

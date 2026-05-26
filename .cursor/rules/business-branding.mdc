@@ -1,0 +1,12 @@
+---
+description: Business branding with CSS variables
+alwaysApply: true
+---
+
+# Business Branding
+
+- Store business branding in the database and expose it through a small set of CSS variables.
+- Use `--primary-color` as the canonical brand token and derive softer surfaces from it in CSS.
+- Apply per-business branding only where there is a concrete business context, especially public business pages.
+- Avoid leaking a business theme into global admin or cross-business dashboards.
+- Validate any user-provided branding inputs and keep sensible fallbacks for legacy businesses.

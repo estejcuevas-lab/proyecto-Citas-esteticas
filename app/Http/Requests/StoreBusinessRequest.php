@@ -8,17 +8,19 @@ class StoreBusinessRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isBusiness() || $this->user()?->isAdmin();
+        return $this->user()?->canManageBusinesses();
     }
 
     public function rules(): array
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:businesses,slug'],
             'type' => ['required', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
+            'primary_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{6})$/'],
         ];
     }
 }

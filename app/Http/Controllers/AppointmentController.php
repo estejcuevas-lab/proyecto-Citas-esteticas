@@ -18,6 +18,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class AppointmentController extends Controller
@@ -61,20 +62,13 @@ class AppointmentController extends Controller
 
     public function create(Request $request): View
     {
-        $businesses = Business::query()
-            ->with(['hours' => fn ($query) => $query->orderBy('day_of_week')])
-            ->orderBy('name')
-            ->get();
+        $businesses = $this->availableBusinessesFor($request);
 
         $dayOptions = BusinessHour::dayOptions();
 
         return view('appointments.create', [
             'businesses' => $businesses,
-            'services' => Service::query()
-                ->where('active', true)
-                ->with('business')
-                ->orderBy('name')
-                ->get(),
+            'services' => $this->availableServicesFor($businesses),
             'dayOptions' => $dayOptions,
             'schedules' => $this->buildSchedules($businesses, $dayOptions),
             'statuses' => Appointment::statuses(),
@@ -113,21 +107,14 @@ class AppointmentController extends Controller
     {
         $this->ensureAppointmentAccess($request, $appointment);
 
-        $businesses = Business::query()
-            ->with(['hours' => fn ($query) => $query->orderBy('day_of_week')])
-            ->orderBy('name')
-            ->get();
+        $businesses = $this->availableBusinessesFor($request);
 
         $dayOptions = BusinessHour::dayOptions();
 
         return view('appointments.edit', [
             'appointment' => $appointment,
             'businesses' => $businesses,
-            'services' => Service::query()
-                ->where('active', true)
-                ->with('business')
-                ->orderBy('name')
-                ->get(),
+            'services' => $this->availableServicesFor($businesses),
             'dayOptions' => $dayOptions,
             'schedules' => $this->buildSchedules($businesses, $dayOptions),
             'statuses' => Appointment::statuses(),
@@ -169,16 +156,18 @@ class AppointmentController extends Controller
 
         $newStatus = $validated['status'];
         $user = $request->user();
+        $ownsAppointment = (int) $appointment->user_id === (int) $user->id;
+        $managesBusiness = $this->userManagesAppointmentBusiness($request, $appointment);
 
-        if ($user->isClient()) {
+        if (! $managesBusiness) {
             abort_unless(
-                $appointment->user_id === $user->id && $newStatus === Appointment::STATUS_CANCELLED,
+                $ownsAppointment && $newStatus === Appointment::STATUS_CANCELLED,
                 403,
-                'Como cliente solo puedes cancelar tus propias citas.'
+                'Solo puedes cancelar tus propias citas.'
             );
         }
 
-        if (($user->isAdmin() || $user->isBusiness()) && $newStatus === Appointment::STATUS_COMPLETED) {
+        if ($managesBusiness && $newStatus === Appointment::STATUS_COMPLETED) {
             abort_unless(
                 $appointment->status === Appointment::STATUS_CONFIRMED,
                 422,
@@ -202,7 +191,7 @@ class AppointmentController extends Controller
         $this->ensureAppointmentAccess($request, $appointment);
 
         abort_unless(
-            $request->user()->isAdmin() || $request->user()->isBusiness(),
+            $this->userManagesAppointmentBusiness($request, $appointment),
             403,
             'Solo el negocio o el administrador pueden actualizar pagos.'
         );
@@ -211,9 +200,18 @@ class AppointmentController extends Controller
             'payment_status' => ['required', 'in:'.implode(',', Appointment::paymentStatuses())],
         ]);
 
-        $appointment->update([
+        $updates = [
             'payment_status' => $validated['payment_status'],
-        ]);
+        ];
+
+        if (
+            $validated['payment_status'] === Appointment::PAYMENT_STATUS_PAID
+            && $appointment->status === Appointment::STATUS_PENDING
+        ) {
+            $updates['status'] = Appointment::STATUS_CONFIRMED;
+        }
+
+        $appointment->update($updates);
 
         return back()->with('status', 'Estado del pago actualizado correctamente.');
     }
@@ -245,7 +243,13 @@ class AppointmentController extends Controller
             'No puedes registrar pagos en una cita cancelada o completada.'
         );
 
-        $validated = $request->validate([
+        abort_if(
+            $appointment->payment_status === Appointment::PAYMENT_STATUS_PAID,
+            422,
+            'El anticipo de esta cita ya fue registrado.'
+        );
+
+        $validator = Validator::make($request->all(), [
             'payment_method' => ['required', Rule::in(array_keys($this->paymentMethods()))],
             'account_holder' => ['required', 'string', 'max:120'],
             'reference' => ['required', 'string', 'max:60'],
@@ -256,6 +260,16 @@ class AppointmentController extends Controller
             'expiry_date' => ['nullable', 'string', 'max:10'],
             'cvv' => ['nullable', 'string', 'max:4'],
         ]);
+
+        if ($validator->fails()) {
+            throw new HttpResponseException(
+                back()
+                    ->withErrors($validator)
+                    ->withInput($request->except($this->sensitivePaymentFields()))
+            );
+        }
+
+        $validated = $validator->validated();
 
         $this->validatePaymentMethodPayload($request, $validated['payment_method']);
 
@@ -275,13 +289,21 @@ class AppointmentController extends Controller
         $user = $request->user();
 
         $ownsAppointment = $appointment->user_id === $user->id;
-        $ownsBusiness = $user->isAdmin() || $user->businesses()->whereKey($appointment->business_id)->exists();
+        $ownsBusiness = $this->userManagesAppointmentBusiness($request, $appointment);
 
         abort_unless(
             $ownsAppointment || $ownsBusiness,
             403,
             'No puedes gestionar esta cita.'
         );
+    }
+
+    private function userManagesAppointmentBusiness(Request $request, Appointment $appointment): bool
+    {
+        $user = $request->user();
+
+        return $user->isAdmin()
+            || ($user->isBusiness() && $user->businesses()->whereKey($appointment->business_id)->exists());
     }
 
     private function ensureAppointmentCanBeEdited(Request $request, Appointment $appointment): void
@@ -341,10 +363,20 @@ class AppointmentController extends Controller
                 throw new HttpResponseException(
                     back()->withErrors([
                         $field => 'Completa los datos del metodo de pago seleccionado.',
-                    ])->withInput()
+                    ])->withInput($request->except($this->sensitivePaymentFields()))
                 );
             }
         }
+    }
+
+    private function sensitivePaymentFields(): array
+    {
+        return [
+            'card_number',
+            'card_name',
+            'expiry_date',
+            'cvv',
+        ];
     }
 
     private function appendPaymentNote(?string $notes, string $paymentMethod, string $reference): string
@@ -375,5 +407,26 @@ class AppointmentController extends Controller
                 })->values()->all(),
             ];
         })->all();
+    }
+
+    private function availableBusinessesFor(Request $request)
+    {
+        $user = $request->user();
+
+        return Business::query()
+            ->when($user->isBusiness(), fn ($query) => $query->where('user_id', $user->id))
+            ->with(['hours' => fn ($query) => $query->orderBy('day_of_week')])
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function availableServicesFor($businesses)
+    {
+        return Service::query()
+            ->whereIn('business_id', $businesses->pluck('id'))
+            ->where('active', true)
+            ->with('business')
+            ->orderBy('name')
+            ->get();
     }
 }

@@ -9,3 +9,45 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@layer base {
+    :root {
+        --primary-color: #994b35;
+        --primary-color-deep: #6a2d1e;
+        --primary-soft: #f1e3d7;
+        --app-bg: #f6f1eb;
+        --app-surface: rgba(255, 251, 247, 0.94);
+        --app-surface-strong: #fffaf5;
+        --app-line: #e1d5c8;
+        --app-text: #2f241c;
+        --app-muted: #746252;
+    }
+
+    body {
+        color: var(--app-text);
+        background:
+            radial-gradient(circle at top left, rgb(153 75 53 / 0.15), transparent 24%),
+            linear-gradient(180deg, #fbf7f2 0%, var(--app-bg) 100%);
+        font-family: var(--font-sans);
+    }
+}
+
+@layer components {
+    .surface-panel {
+        background: var(--app-surface);
+        border: 1px solid var(--app-line);
+        border-radius: 1.75rem;
+        box-shadow: 0 24px 64px rgb(89 61 43 / 0.12);
+    }
+
+    .surface-card {
+        background: var(--app-surface-strong);
+        border: 1px solid var(--app-line);
+        border-radius: 1.5rem;
+    }
+
+    .brand-button {
+        color: #fffaf5;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-color-deep));
+    }
+}

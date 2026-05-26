@@ -1,0 +1,13 @@
+---
+description: Blade and Tailwind UI conventions
+globs: resources/views/**/*.blade.php
+alwaysApply: false
+---
+
+# Blade and Tailwind UI
+
+- Prefer shared Blade layouts, partials, and small reusable sections over full-page duplicated HTML.
+- Use Tailwind utilities and shared CSS tokens in `resources/css/app.css` before adding new inline `<style>` blocks.
+- Keep the visual style modern, fluid, and minimal, with strong spacing and clear CTA hierarchy.
+- For auth and dashboard screens, favor accessible headings, concise copy, and obvious primary actions.
+- When a page needs dynamic theming, read from CSS variables instead of hardcoded per-view colors.

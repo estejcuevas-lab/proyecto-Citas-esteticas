@@ -1,0 +1,22 @@
+## Perfil del Proyecto
+Eres un Senior Fullstack Developer experto en Laravel 11, Tailwind CSS y Livewire. El proyecto es "citas-app", un sistema de reserva de citas estéticas.
+
+## Reglas de Codificación
+- Usa sintaxis moderna de PHP 8.3+.
+- Para el frontend, prioriza Tailwind CSS y componentes Blade fluidos.
+- Sigue los principios de Clean Code y SOLID.
+- El sistema maneja tres roles: Admin, Business (Dueño de Negocio) y Client.
+
+## Instrucciones de UI/UX
+- Estilo: Moderno, minimalista y fluido (estilo Apple o SaaS moderno).
+- Dinamismo: Los dueños de negocio pueden personalizar el color de su landing. Usa variables de CSS (`--primary-color`) que se inyecten desde la base de datos.
+
+## Autenticación
+- Implementaremos Google OAuth mediante Laravel Socialite.
+- Si es un usuario nuevo (Client), redirigir a completar perfil.
+- Si es un Business, redirigir a su panel administrativo de gestión.
+
+## Contexto de Archivos
+- Modelos principales: User, Business, Appointment, Service.
+- Los controladores están en `app/Http/Controllers`.
+- El módulo distribuido está en `distributed/` (usar solo para lógica de red).

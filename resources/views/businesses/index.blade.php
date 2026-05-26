@@ -1,145 +1,59 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Negocios</title>
-    <style>
-        :root {
-            --bg: #f4efe8;
-            --panel: rgba(255, 251, 247, 0.94);
-            --panel-strong: #fffaf5;
-            --line: #ddcdbd;
-            --text: #2f241c;
-            --muted: #776655;
-            --brand: #994b35;
-            --brand-deep: #6a2d1e;
-            --soft: #efe2d6;
-            --shadow: 0 20px 50px rgba(87, 56, 36, 0.14);
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: Georgia, "Times New Roman", serif;
-            background: linear-gradient(180deg, #f8f4ef 0%, var(--bg) 100%);
-            color: var(--text);
-        }
-        .shell { min-height: 100vh; padding: 2rem; }
-        .panel {
-            max-width: 1120px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 28px;
-            box-shadow: var(--shadow);
-        }
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-            align-items: start;
-            margin-bottom: 1.5rem;
-        }
-        h1 { margin: 0; font-size: clamp(2rem, 4vw, 3rem); }
-        .muted { color: var(--muted); line-height: 1.6; }
-        .button-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-        .button {
-            text-decoration: none;
-            padding: 0.9rem 1.1rem;
-            border-radius: 14px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .button.primary { background: linear-gradient(135deg, var(--brand), var(--brand-deep)); color: #fffaf5; }
-        .button.secondary { background: var(--soft); color: var(--text); }
-        .list { display: grid; gap: 1rem; }
-        .card {
-            padding: 1.25rem;
-            border-radius: 22px;
-            border: 1px solid var(--line);
-            background: var(--panel-strong);
-        }
-        .row {
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem;
-            align-items: start;
-            flex-wrap: wrap;
-        }
-        .meta {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 0.85rem;
-            margin-top: 1rem;
-        }
-        .meta-box {
-            padding: 0.95rem;
-            border-radius: 18px;
-            background: #fcf8f4;
-            border: 1px solid #eadfd4;
-        }
-        .meta-box span {
-            display: block;
-            color: var(--muted);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            margin-bottom: 0.35rem;
-        }
-        @media (max-width: 900px) {
-            .shell { padding: 1rem; }
-            .panel { padding: 1.25rem; }
-        }
-    </style>
-</head>
-<body>
-    <main class="shell">
-        <section class="panel">
-            <div class="topbar">
-                <div>
-                    <h1>Negocios registrados</h1>
-                    <p class="muted">Gestiona la información base de cada negocio y navega rápido hacia servicios y horarios.</p>
-                </div>
-                <div class="button-row">
-                    <a class="button secondary" href="{{ route('dashboard') }}">Volver al panel</a>
-                    @if ($user->isBusiness() || $user->isAdmin())
-                        <a class="button primary" href="{{ route('businesses.create') }}">Nuevo negocio</a>
-                    @endif
-                </div>
-            </div>
+@extends('layouts.app')
 
-            <div class="list">
-                @forelse ($businesses as $business)
-                    <article class="card">
-                        <div class="row">
-                            <div>
-                                <h2 style="margin:0 0 .35rem;">{{ $business->name }}</h2>
-                                <p class="muted" style="margin:0;">{{ $business->type }}</p>
+@section('title', 'Negocios')
+
+@section('content')
+    <section class="surface">
+        <div class="hero-grid">
+            <article class="card">
+                <span class="eyebrow">Administracion business</span>
+                <h1 class="page-title">Negocios registrados</h1>
+                <p class="muted">
+                    Desde aqui controlas slug, branding, servicios, horarios y la pagina publica de cada negocio.
+                </p>
+            </article>
+
+            <aside class="card">
+                <h2 class="section-title">Acciones rapidas</h2>
+                <div class="actions" style="margin-top: 1rem;">
+                    <a class="btn btn-secondary" href="{{ route('dashboard') }}">Volver al panel</a>
+                    <a class="btn btn-primary" href="{{ route('businesses.create') }}">Nuevo negocio</a>
+                </div>
+            </aside>
+        </div>
+
+        <div class="list" style="margin-top: 1.5rem;">
+            @forelse ($businesses as $business)
+                <article class="card" style="--primary-color: {{ $business->brandColor() }}; --primary-color-deep: #6a2d1e; --primary-soft: #f1e3d7;">
+                    <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start;">
+                        <div>
+                            <div class="actions" style="margin-bottom: 0.65rem;">
+                                <span class="pill">{{ $business->type }}</span>
+                                <span class="pill">{{ $business->slug }}</span>
                             </div>
-                            <div class="button-row">
-                                <a class="button primary" href="{{ route('businesses.services.index', $business) }}">Servicios</a>
-                                <a class="button primary" href="{{ route('businesses.hours.index', $business) }}">Horarios</a>
-                                <a class="button secondary" href="{{ route('businesses.edit', $business) }}">Editar</a>
-                            </div>
+                            <h2 class="section-title">{{ $business->name }}</h2>
+                            <p class="muted" style="margin: 0.45rem 0 0;">Color principal: {{ $business->brandColor() }}</p>
                         </div>
-                        <div class="meta">
-                            <div class="meta-box"><span>Correo</span>{{ $business->email ?: 'Sin registrar' }}</div>
-                            <div class="meta-box"><span>Teléfono</span>{{ $business->phone ?: 'Sin registrar' }}</div>
-                            <div class="meta-box"><span>Dirección</span>{{ $business->address ?: 'Sin registrar' }}</div>
+
+                        <div class="actions">
+                            <a class="btn btn-primary" href="{{ route('businesses.services.index', $business) }}">Servicios</a>
+                            <a class="btn btn-primary" href="{{ route('businesses.hours.index', $business) }}">Horarios</a>
+                            <a class="btn btn-secondary" href="{{ route('businesses.edit', $business) }}">Editar</a>
+                            <a class="btn btn-secondary" href="{{ route('public.businesses.show', ['business' => $business->slug]) }}" target="_blank">Pagina publica</a>
                         </div>
-                    </article>
-                @empty
-                    <article class="card">
-                        <h2 style="margin-top:0;">Todavía no hay negocios registrados</h2>
-                        <p class="muted">Cuando agregues un negocio, desde aquí podrás administrar sus servicios y horarios.</p>
-                    </article>
-                @endforelse
-            </div>
-        </section>
-    </main>
-</body>
-</html>
+                    </div>
+
+                    <div class="meta-grid" style="margin-top: 1rem;">
+                        <div class="meta-box"><span>Correo</span>{{ $business->email ?: 'Sin registrar' }}</div>
+                        <div class="meta-box"><span>Telefono</span>{{ $business->phone ?: 'Sin registrar' }}</div>
+                        <div class="meta-box"><span>Direccion</span>{{ $business->address ?: 'Sin registrar' }}</div>
+                    </div>
+                </article>
+            @empty
+                <article class="empty-state">
+                    Todavia no hay negocios registrados. Crea el primero para habilitar branding, rutas publicas y gestion interna.
+                </article>
+            @endforelse
+        </div>
+    </section>
+@endsection

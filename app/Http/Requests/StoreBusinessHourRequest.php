@@ -9,7 +9,7 @@ class StoreBusinessHourRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isBusiness() || $this->user()?->isAdmin();
+        return $this->user()?->canManageBusinesses();
     }
 
     public function rules(): array

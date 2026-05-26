@@ -186,19 +186,19 @@
                         <div class="grid">
                             <div class="field full">
                                 <label for="card_number">Número de tarjeta</label>
-                                <input id="card_number" name="card_number" type="text" value="{{ old('card_number') }}" placeholder="4111 1111 1111 1111">
+                                <input id="card_number" name="card_number" type="text" value="" placeholder="4111 1111 1111 1111">
                             </div>
                             <div class="field full">
                                 <label for="card_name">Nombre impreso</label>
-                                <input id="card_name" name="card_name" type="text" value="{{ old('card_name') }}">
+                                <input id="card_name" name="card_name" type="text" value="">
                             </div>
                             <div class="field">
                                 <label for="expiry_date">Vence</label>
-                                <input id="expiry_date" name="expiry_date" type="text" value="{{ old('expiry_date') }}" placeholder="12/30">
+                                <input id="expiry_date" name="expiry_date" type="text" value="" placeholder="12/30">
                             </div>
                             <div class="field">
                                 <label for="cvv">CVV</label>
-                                <input id="cvv" name="cvv" type="text" value="{{ old('cvv') }}" placeholder="123">
+                                <input id="cvv" name="cvv" type="text" value="" placeholder="123">
                             </div>
                         </div>
                     </div>
@@ -207,19 +207,19 @@
                         <div class="grid">
                             <div class="field full">
                                 <label for="debit_card_number">Número de tarjeta</label>
-                                <input id="debit_card_number" type="text" value="{{ old('card_number') }}" placeholder="5222 2222 2222 2222" data-mirror="card_number">
+                                <input id="debit_card_number" type="text" value="" placeholder="5222 2222 2222 2222" data-mirror="card_number">
                             </div>
                             <div class="field full">
                                 <label for="debit_card_name">Nombre impreso</label>
-                                <input id="debit_card_name" type="text" value="{{ old('card_name') }}" data-mirror="card_name">
+                                <input id="debit_card_name" type="text" value="" data-mirror="card_name">
                             </div>
                             <div class="field">
                                 <label for="debit_expiry_date">Vence</label>
-                                <input id="debit_expiry_date" type="text" value="{{ old('expiry_date') }}" placeholder="12/30" data-mirror="expiry_date">
+                                <input id="debit_expiry_date" type="text" value="" placeholder="12/30" data-mirror="expiry_date">
                             </div>
                             <div class="field">
                                 <label for="debit_cvv">CVV</label>
-                                <input id="debit_cvv" type="text" value="{{ old('cvv') }}" placeholder="123" data-mirror="cvv">
+                                <input id="debit_cvv" type="text" value="" placeholder="123" data-mirror="cvv">
                             </div>
                         </div>
                     </div>
