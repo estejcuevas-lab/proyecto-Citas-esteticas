@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Service extends Model
 {
@@ -27,6 +28,12 @@ class Service extends Model
         'duration_minutes',
         'price',
         'active',
+        'gallery_images',
+    ];
+
+    protected $casts = [
+        'active' => 'boolean',
+        'gallery_images' => 'array',
     ];
 
     public function business(): BelongsTo
@@ -45,5 +52,20 @@ class Service extends Model
         // La relacion permite enlazar el servicio con las citas que lo consumen.
         // ======================================================================
         return $this->hasMany(Appointment::class);
+    }
+
+    public function galleryImagePaths(): array
+    {
+        $images = is_array($this->gallery_images) ? $this->gallery_images : [];
+
+        return array_values(array_filter($images, static fn ($path): bool => is_string($path) && $path !== ''));
+    }
+
+    public function galleryImageUrls(): array
+    {
+        return array_map(
+            static fn (string $path): string => Storage::url($path),
+            $this->galleryImagePaths()
+        );
     }
 }

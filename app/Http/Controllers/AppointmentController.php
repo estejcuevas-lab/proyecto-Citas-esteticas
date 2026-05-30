@@ -62,7 +62,10 @@ class AppointmentController extends Controller
 
     public function create(Request $request): View
     {
-        $businesses = $this->availableBusinessesFor($request);
+        $preselectedBusiness = $this->resolvePreselectedBusiness($request);
+        $businesses = $preselectedBusiness
+            ? collect([$preselectedBusiness->load(['hours' => fn ($query) => $query->orderBy('day_of_week')])])
+            : $this->availableBusinessesFor($request);
 
         $dayOptions = BusinessHour::dayOptions();
 
@@ -74,6 +77,8 @@ class AppointmentController extends Controller
             'statuses' => Appointment::statuses(),
             'paymentStatuses' => Appointment::paymentStatuses(),
             'user' => $request->user(),
+            'preselectedBusiness' => $preselectedBusiness,
+            'lockBusinessSelection' => $preselectedBusiness !== null,
         ]);
     }
 
@@ -428,5 +433,31 @@ class AppointmentController extends Controller
             ->with('business')
             ->orderBy('name')
             ->get();
+    }
+
+    private function resolvePreselectedBusiness(Request $request): ?Business
+    {
+        $businessIdentifier = (string) $request->query('business', '');
+
+        if ($businessIdentifier === '') {
+            return null;
+        }
+
+        $query = Business::query();
+        $business = ctype_digit($businessIdentifier)
+            ? $query->find((int) $businessIdentifier)
+            : $query->where('slug', $businessIdentifier)->first();
+
+        if (! $business) {
+            return null;
+        }
+
+        $user = $request->user();
+
+        if ($user->isBusiness() && (int) $business->user_id !== (int) $user->id && ! $user->isAdmin()) {
+            abort(403, 'No puedes reservar en un negocio que no gestionas con este perfil.');
+        }
+
+        return $business;
     }
 }

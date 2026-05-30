@@ -73,6 +73,11 @@ class User extends Authenticatable
         return $this->hasMany(Appointment::class);
     }
 
+    public function businessReviews(): HasMany
+    {
+        return $this->hasMany(BusinessReview::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;

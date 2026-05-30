@@ -30,10 +30,10 @@
                                 <input id="slug" name="slug" type="text" value="{{ old('slug') }}" placeholder="mi-negocio">
                             </label>
 
-                            <label for="primary_color">
-                                Color principal
-                                <input id="primary_color" name="primary_color" type="text" value="{{ old('primary_color', '#994b35') }}" placeholder="#994b35">
-                            </label>
+                            @include('businesses.partials.brand-color-picker', [
+                                'inputId' => 'primary_color',
+                                'value' => old('primary_color', '#994B35'),
+                            ])
                         </div>
 
                         <label for="type">

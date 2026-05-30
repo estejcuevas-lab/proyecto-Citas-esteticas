@@ -1,56 +1,78 @@
 @extends('layouts.app')
 
-@section('title', 'Negocios publicos')
+@section('title', 'citas-app · Reserva tu cita')
+
+@php
+    $categoryMap = $businesses
+        ->groupBy(fn ($business) => \Illuminate\Support\Str::slug((string) $business->type))
+        ->map(fn ($group) => (string) $group->first()->type)
+        ->sort()
+        ->all();
+@endphp
 
 @section('content')
     <section class="surface">
         <div class="hero-grid">
             <article class="card card-accent">
-                <span class="eyebrow">Vitrina publica</span>
-                <h1 class="page-title">Explora negocios activos antes de iniciar sesion.</h1>
+                <span class="eyebrow">Sistema multinegocio</span>
+                <h1 class="page-title">Encuentra <span class="text-accent">salones</span> y centros de belleza con servicios y reseñas reales.</h1>
                 <p class="muted">
-                    Cada negocio cuenta con una pagina propia y color principal configurable
-                    para presentar servicios, contacto y disponibilidad base.
+                    Explora negocios activos por ciudad, revisa su oferta principal y entra a su perfil para reservar.
                 </p>
+                <div class="actions mt-6">
+                    @auth
+                        <a class="btn btn-secondary inline-flex items-center gap-2" href="{{ route('dashboard') }}">
+                            <x-heroicon-o-squares-2x2 class="h-5 w-5" />
+                            Ir al panel
+                        </a>
+                        <a class="btn btn-secondary inline-flex items-center gap-2" href="{{ route('appointments.index') }}">
+                            <x-heroicon-o-calendar-days class="h-5 w-5" />
+                            Mis citas
+                        </a>
+                    @else
+                        <a class="btn btn-secondary inline-flex items-center gap-2" href="{{ route('login') }}">
+                            <x-heroicon-o-arrow-right-end-on-rectangle class="h-5 w-5" />
+                            Iniciar sesion
+                        </a>
+                        <a class="btn btn-secondary" href="{{ route('register') }}">Crear cuenta</a>
+                    @endauth
+                </div>
             </article>
 
             <aside class="card">
-                <h2 class="section-title">Entrar a la plataforma</h2>
-                <p class="muted" style="margin-top: 0.75rem;">
-                    Cuando quieras reservar o administrar, vuelve al acceso principal.
-                </p>
-                <div class="actions" style="margin-top: 1rem;">
-                    <a class="btn btn-primary" href="{{ route('home') }}">Iniciar sesion</a>
-                </div>
+                <h2 class="section-title">Que puedes hacer aqui</h2>
+                <ul class="muted mt-4 list-disc space-y-2 pl-5">
+                    <li>Comparar negocios con imagenes, precios y duraciones.</li>
+                    <li>Entrar al detalle para ver reseñas verificadas de clientes.</li>
+                    <li>Iniciar sesion y reservar cita desde el perfil del negocio.</li>
+                </ul>
             </aside>
         </div>
 
-        <div class="list" style="margin-top: 1.5rem;">
-            @forelse ($businesses as $business)
-                <article class="card" style="--primary-color: {{ $business->brandColor() }}; --primary-color-deep: #6a2d1e; --primary-soft: #f1e3d7;">
-                    <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start;">
-                        <div>
-                            <div class="actions" style="margin-bottom: 0.6rem;">
-                                <span class="pill">{{ $business->type }}</span>
-                                <span class="pill">{{ $business->services->count() }} servicios</span>
-                            </div>
-                            <h2 class="section-title">{{ $business->name }}</h2>
-                            <p class="muted" style="margin: 0.5rem 0 0;">
-                                {{ $business->address ?: 'Direccion disponible al abrir la pagina del negocio.' }}
-                            </p>
-                        </div>
+        <div class="section-pathline" aria-hidden="true"></div>
 
-                        <div class="actions">
-                            <a class="btn btn-primary" href="{{ route('public.businesses.show', ['business' => $business->slug]) }}">Ver pagina</a>
-                            <a class="btn btn-secondary" href="{{ route('home') }}">Ingresar</a>
-                        </div>
-                    </div>
-                </article>
-            @empty
-                <article class="empty-state">
-                    No hay negocios publicos disponibles todavia.
-                </article>
-            @endforelse
+        <div class="mt-8" id="catalogo" x-data="{ activeType: 'all' }">
+            <div class="row-between mb-4">
+                <h2 class="section-title m-0">Catalogo de negocios</h2>
+                <span class="type-pill">{{ $businesses->count() }} disponibles</span>
+            </div>
+            <div class="market-filter-row mb-4">
+                <button type="button" class="market-filter-chip" :class="{ 'is-active': activeType === 'all' }" @click="activeType = 'all'">
+                    Todos
+                </button>
+                @foreach ($categoryMap as $categoryKey => $categoryLabel)
+                    <button
+                        type="button"
+                        class="market-filter-chip"
+                        :class="{ 'is-active': activeType === '{{ $categoryKey }}' }"
+                        @click="activeType = '{{ $categoryKey }}'"
+                    >
+                        {{ $categoryLabel }}
+                    </button>
+                @endforeach
+            </div>
+            @include('partials.business-catalog', ['businesses' => $businesses])
         </div>
     </section>
 @endsection
+

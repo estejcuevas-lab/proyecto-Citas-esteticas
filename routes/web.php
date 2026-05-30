@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\BusinessAccessRequestController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\BusinessHourController;
+use App\Http\Controllers\BusinessReviewController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\PublicBusinessController;
@@ -23,8 +24,8 @@ use Illuminate\Support\Facades\Route;
 // GUIA 1 - ACTIVIDAD 3: ANALISIS DE CAPAS
 // Las rutas separan la entrada HTTP de la logica manejada por controladores y vistas.
 // ======================================================================
-Route::get('/', [AuthenticatedSessionController::class, 'create'])->name('home');
-Route::get('/negocios', [PublicBusinessController::class, 'index'])->name('public.businesses.index');
+Route::get('/', [PublicBusinessController::class, 'index'])->name('home');
+Route::redirect('/negocios', '/')->name('public.businesses.index');
 Route::get('/negocios/{business:slug}', [PublicBusinessController::class, 'show'])->name('public.businesses.show');
 
 Route::middleware('guest')->group(function () {
@@ -47,6 +48,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::middleware('profile.completed')->group(function () {
+        Route::post('/negocios/{business:slug}/resenas', [BusinessReviewController::class, 'store'])->name('public.businesses.reviews.store');
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
         Route::post('/business-access/{user}/approve', [BusinessAccessRequestController::class, 'approve'])->name('business-access.approve');
         Route::resource('appointments', AppointmentController::class)->except(['show', 'destroy']);

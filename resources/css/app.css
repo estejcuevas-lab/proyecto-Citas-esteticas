@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@plugin '@tailwindcss/forms';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -6,48 +7,836 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Cormorant Garamond', ui-serif, Georgia, 'Times New Roman', serif;
+    --color-brand: var(--primary-color);
+    --color-brand-deep: var(--primary-color-deep);
+    --color-brand-soft: var(--primary-soft);
 }
 
 @layer base {
     :root {
-        --primary-color: #994b35;
-        --primary-color-deep: #6a2d1e;
-        --primary-soft: #f1e3d7;
-        --app-bg: #f6f1eb;
-        --app-surface: rgba(255, 251, 247, 0.94);
-        --app-surface-strong: #fffaf5;
-        --app-line: #e1d5c8;
-        --app-text: #2f241c;
-        --app-muted: #746252;
+        --primary-color: #dc2626;
+        --primary-color-deep: color-mix(in srgb, var(--primary-color) 68%, #000);
+        --primary-soft: color-mix(in srgb, var(--primary-color) 22%, transparent);
+        --accent-cta: #2dd4bf;
+        --accent-cta-deep: #14b8a6;
+        --accent-cta-text: #042f2e;
+        --app-bg: #09090b;
+        --app-surface: rgb(24 24 27 / 0.55);
+        --app-surface-strong: rgb(39 39 42 / 0.72);
+        --app-line: rgb(255 255 255 / 0.1);
+        --app-text: #fafafa;
+        --app-muted: #a1a1aa;
+        --app-success-bg: rgb(20 83 45 / 0.35);
+        --app-success-text: #86efac;
+        --app-error-bg: rgb(127 29 29 / 0.35);
+        --app-error-text: #fca5a5;
+        --app-shadow: 0 24px 64px rgb(0 0 0 / 0.45);
+        --accent-border-glow: color-mix(in srgb, var(--primary-color) 38%, transparent);
+        --landing-bg: #09090b;
+        --landing-cream: #f5ebd7;
+        --landing-gold: var(--primary-color);
     }
 
     body {
         color: var(--app-text);
         background:
-            radial-gradient(circle at top left, rgb(153 75 53 / 0.15), transparent 24%),
-            linear-gradient(180deg, #fbf7f2 0%, var(--app-bg) 100%);
+            radial-gradient(ellipse 70% 45% at 50% -10%, color-mix(in srgb, var(--primary-color) 14%, transparent), transparent 55%),
+            radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--accent-cta) 8%, transparent), transparent 40%),
+            var(--app-bg);
         font-family: var(--font-sans);
+        min-height: 100vh;
+    }
+
+    ::selection {
+        background: color-mix(in srgb, var(--primary-color) 45%, transparent);
+        color: #fff;
     }
 }
 
 @layer components {
-    .surface-panel {
+    .font-display {
+        font-family: var(--font-display);
+    }
+
+    .text-accent {
+        color: var(--primary-color);
+    }
+
+    .glass-panel {
+        background: var(--app-surface);
+        border: 1px solid var(--app-line);
+        box-shadow:
+            0 0 0 1px var(--accent-border-glow),
+            var(--app-shadow);
+        backdrop-filter: blur(16px);
+    }
+
+    .page-shell {
+        @apply min-h-screen p-5;
+    }
+
+    .page-width {
+        @apply mx-auto max-w-6xl;
+    }
+
+    .site-header {
+        @apply sticky top-0 z-40 mb-6 flex items-center justify-between gap-4 py-3 backdrop-blur-xl;
+        background: color-mix(in srgb, var(--app-bg) 82%, transparent);
+        border-bottom: 1px solid var(--app-line);
+        box-shadow: 0 1px 0 var(--accent-border-glow);
+    }
+
+    .section-pathline {
+        width: 1px;
+        height: 2.5rem;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(180deg, var(--primary-color), transparent);
+    }
+
+    .surface-panel,
+    .surface {
         background: var(--app-surface);
         border: 1px solid var(--app-line);
         border-radius: 1.75rem;
-        box-shadow: 0 24px 64px rgb(89 61 43 / 0.12);
+        box-shadow:
+            0 0 0 1px var(--accent-border-glow),
+            var(--app-shadow);
+        backdrop-filter: blur(16px);
+        @apply p-6;
     }
 
-    .surface-card {
+    .surface-card,
+    .card {
         background: var(--app-surface-strong);
         border: 1px solid var(--app-line);
         border-radius: 1.5rem;
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 22%, transparent);
+        backdrop-filter: blur(12px);
+        @apply p-5;
     }
 
     .brand-button {
-        color: #fffaf5;
+        @apply inline-flex items-center justify-center rounded-lg px-5 py-3 text-sm font-bold transition;
+        background: var(--accent-cta);
+        color: var(--accent-cta-text);
+    }
+
+    .brand-button:hover {
+        background: var(--accent-cta-deep);
+    }
+
+    body[style*='--primary-color'] .brand-button {
         background: linear-gradient(135deg, var(--primary-color), var(--primary-color-deep));
+        color: #fff;
+    }
+
+    .btn {
+        @apply inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-3 text-sm font-bold no-underline transition;
+    }
+
+    .btn-primary {
+        background: var(--accent-cta);
+        color: var(--accent-cta-text);
+    }
+
+    .btn-primary:hover {
+        background: var(--accent-cta-deep);
+    }
+
+    body[style*='--primary-color'] .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-color-deep));
+        color: #fff;
+    }
+
+    .btn-secondary {
+        border: 1px solid var(--app-line);
+        background: rgb(255 255 255 / 0.04);
+        color: var(--app-text);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 18%, transparent);
+    }
+
+    .btn-secondary:hover {
+        background: rgb(255 255 255 / 0.08);
+        border-color: color-mix(in srgb, var(--primary-color) 35%, transparent);
+    }
+
+    .btn-dark {
+        @apply border border-white/10 bg-black/40 text-zinc-100;
+    }
+
+    .eyebrow {
+        @apply inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold tracking-widest uppercase;
+        border: 1px solid color-mix(in srgb, var(--primary-color) 40%, transparent);
+        background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+        color: var(--primary-color);
+    }
+
+    .page-title {
+        @apply m-0 text-4xl leading-tight font-bold tracking-tight md:text-5xl;
+        font-family: var(--font-sans);
+    }
+
+    .section-title {
+        @apply m-0 text-2xl font-semibold tracking-tight md:text-3xl;
+        font-family: var(--font-sans);
+    }
+
+    .hero-grid {
+        @apply grid gap-4 lg:grid-cols-[1.35fr_0.95fr];
+    }
+
+    .card-accent {
+        @apply text-zinc-100;
+        background: color-mix(in srgb, var(--app-surface-strong) 88%, transparent);
+        border: 1px solid rgb(255 255 255 / 0.12);
+        box-shadow:
+            0 0 0 1px var(--accent-border-glow),
+            0 20px 50px rgb(0 0 0 / 0.4);
+        backdrop-filter: blur(16px);
+    }
+
+    .card-accent .text-muted,
+    .card-accent .muted {
+        color: var(--app-muted);
+    }
+
+    .flash-success {
+        @apply rounded-xl border px-4 py-3 text-sm font-semibold;
+        background: var(--app-success-bg);
+        color: var(--app-success-text);
+        border-color: rgb(34 197 94 / 0.35);
+    }
+
+    .flash-error {
+        @apply rounded-xl border px-4 py-3 text-sm font-semibold;
+        background: var(--app-error-bg);
+        color: var(--app-error-text);
+        border-color: rgb(248 113 113 / 0.35);
+    }
+
+    .form-input {
+        @apply w-full rounded-lg border bg-black/30 px-4 py-3 text-[var(--app-text)] shadow-sm backdrop-blur-sm focus:ring-2;
+        border-color: var(--app-line);
+    }
+
+    .form-input:focus {
+        border-color: color-mix(in srgb, var(--primary-color) 55%, transparent);
+        --tw-ring-color: color-mix(in srgb, var(--primary-color) 25%, transparent);
+    }
+
+    .meta-box,
+    .info-box {
+        @apply rounded-xl border p-4 backdrop-blur-sm;
+        border-color: var(--app-line);
+        background: rgb(255 255 255 / 0.03);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 16%, transparent);
+    }
+
+    .meta-box span,
+    .info-box span {
+        @apply mb-1 block text-xs font-semibold tracking-widest uppercase;
+        color: var(--app-muted);
+    }
+
+    .empty-state {
+        @apply rounded-xl border border-dashed p-5 backdrop-blur-sm;
+        border-color: color-mix(in srgb, var(--primary-color) 30%, transparent);
+        background: rgb(255 255 255 / 0.02);
+        color: var(--app-muted);
+    }
+
+    .landing-shell {
+        @apply -mx-5 -mt-5 min-h-screen text-zinc-100;
+        background: var(--landing-bg);
+    }
+
+    .landing-hero {
+        @apply relative overflow-hidden rounded-b-[2rem];
+        min-height: clamp(22rem, 55vh, 36rem);
+        border-bottom: 1px solid var(--app-line);
+        box-shadow: 0 1px 0 var(--accent-border-glow);
+    }
+
+    .landing-hero__bg {
+        @apply absolute inset-0 bg-cover bg-center;
+    }
+
+    .landing-hero__overlay {
+        @apply absolute inset-0;
+        background: linear-gradient(
+            105deg,
+            rgb(9 9 11 / 0.94) 0%,
+            rgb(9 9 11 / 0.65) 45%,
+            rgb(9 9 11 / 0.35) 100%
+        );
+    }
+
+    .landing-hero__content {
+        @apply relative z-10 flex h-full max-w-6xl flex-col justify-end px-6 py-12 md:px-10 md:py-16;
+    }
+
+    .landing-hero__title {
+        @apply max-w-xl text-4xl leading-none font-bold tracking-wide text-white uppercase md:text-6xl;
+        font-family: var(--font-sans);
+    }
+
+    .landing-pill-btn {
+        @apply mt-8 inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-bold tracking-wide uppercase transition;
+        background: var(--accent-cta);
+        color: var(--accent-cta-text);
+    }
+
+    .landing-pill-btn:hover {
+        background: var(--accent-cta-deep);
+    }
+
+    body[style*='--primary-color'] .landing-pill-btn {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-color-deep));
+        color: #fff;
+    }
+
+    .landing-card-light,
+    .landing-card-dark {
+        @apply rounded-2xl border border-white/10 bg-zinc-900/50 p-6 text-zinc-100 backdrop-blur-md;
+        box-shadow: 0 0 0 1px var(--accent-border-glow);
+    }
+
+    .landing-feature-icon {
+        @apply mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl border text-[var(--primary-color)];
+        border-color: color-mix(in srgb, var(--primary-color) 45%, transparent);
+        background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+    }
+
+    .muted,
+    .text-muted {
+        @apply leading-relaxed;
+        color: var(--app-muted);
+    }
+
+    .actions {
+        @apply flex flex-wrap gap-3;
+    }
+
+    .field-list {
+        @apply grid gap-4;
+    }
+
+    .two-col {
+        @apply grid gap-4 md:grid-cols-2;
+    }
+
+    .list {
+        @apply grid gap-4;
+    }
+
+    .pill {
+        @apply inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-bold;
+        border-color: color-mix(in srgb, var(--primary-color) 35%, transparent);
+        background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+        color: var(--primary-color);
+    }
+
+    .link-list {
+        @apply flex flex-wrap gap-3;
+    }
+
+    label {
+        @apply grid gap-2 text-sm font-semibold text-zinc-200;
+    }
+
+    input:not([type='checkbox']):not([type='radio']),
+    select,
+    textarea {
+        @apply w-full rounded-lg border bg-black/30 px-4 py-3 text-[var(--app-text)] shadow-sm backdrop-blur-sm focus:ring-2;
+        border-color: var(--app-line);
+    }
+
+    input:not([type='checkbox']):not([type='radio']):focus,
+    select:focus,
+    textarea:focus {
+        border-color: color-mix(in srgb, var(--primary-color) 55%, transparent);
+        --tw-ring-color: color-mix(in srgb, var(--primary-color) 25%, transparent);
+    }
+
+    .card-accent .eyebrow {
+        border-color: rgb(255 255 255 / 0.2);
+        background: rgb(255 255 255 / 0.06);
+        color: var(--primary-color);
+    }
+
+    .page-topbar {
+        @apply mb-6 flex flex-wrap items-end justify-between gap-4;
+    }
+
+    .page-topbar .page-title {
+        @apply mb-1 text-3xl md:text-4xl;
+    }
+
+    .meta-grid,
+    .info-grid {
+        @apply grid gap-3;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .module-hero {
+        @apply mb-6 grid gap-4 lg:grid-cols-[1.35fr_0.95fr];
+    }
+
+    .module-hero-card {
+        @apply rounded-2xl border p-6 text-zinc-100;
+        border-color: rgb(255 255 255 / 0.12);
+        background: color-mix(in srgb, var(--app-surface-strong) 90%, transparent);
+        box-shadow: 0 0 0 1px var(--accent-border-glow);
+    }
+
+    .module-aside-card {
+        background: var(--app-surface-strong);
+        border: 1px solid var(--app-line);
+        border-radius: 1.5rem;
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 22%, transparent);
+        @apply p-6 backdrop-blur-md;
+    }
+
+    .card-header {
+        @apply flex flex-wrap items-start justify-between gap-4;
+    }
+
+    .button-row {
+        @apply flex flex-wrap gap-3;
+    }
+
+    .button {
+        @apply inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-3 text-sm font-bold no-underline transition;
+    }
+
+    .button.primary,
+    a.button.primary {
+        background: var(--accent-cta);
+        color: var(--accent-cta-text);
+    }
+
+    .button.secondary,
+    a.button.secondary {
+        border: 1px solid var(--app-line);
+        background: rgb(255 255 255 / 0.04);
+        color: var(--app-text);
+    }
+
+    .button.ghost,
+    a.button.ghost {
+        @apply border bg-transparent text-zinc-200;
+        border-color: var(--app-line);
+    }
+
+    .actions button.confirm {
+        @apply rounded-lg px-4 py-3 text-sm font-bold text-white;
+        background: #16a34a;
+    }
+
+    .actions button.warn {
+        @apply rounded-lg px-4 py-3 text-sm font-bold text-white;
+        background: var(--primary-color);
+    }
+
+    .actions button.info {
+        @apply rounded-lg px-4 py-3 text-sm font-bold text-zinc-100;
+        background: rgb(255 255 255 / 0.1);
+    }
+
+    .actions form {
+        @apply m-0;
+    }
+
+    .pill.pending {
+        background: rgb(180 83 9 / 0.25);
+        color: #fdba74;
+        border-color: rgb(251 146 60 / 0.35);
+    }
+
+    .pill.confirmed,
+    .pill.paid,
+    .pill.completed,
+    .pill.active {
+        background: var(--app-success-bg);
+        color: var(--app-success-text);
+        border-color: rgb(34 197 94 / 0.3);
+    }
+
+    .pill.cancelled {
+        background: var(--app-error-bg);
+        color: var(--app-error-text);
+        border-color: rgb(248 113 113 / 0.3);
+    }
+
+    .pill.pending_advance,
+    .pill.partially_paid {
+        background: color-mix(in srgb, var(--primary-color) 15%, transparent);
+        color: var(--primary-color);
+    }
+
+    .pill.inactive {
+        background: rgb(255 255 255 / 0.06);
+        color: var(--app-muted);
+    }
+
+    .catalog-grid {
+        @apply grid gap-4;
+        grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    }
+
+    .business-card {
+        background: var(--app-surface-strong);
+        border: 1px solid var(--app-line);
+        border-radius: 1.5rem;
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 22%, transparent);
+        @apply p-5 backdrop-blur-md;
+    }
+
+    .type-pill {
+        @apply inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-bold;
+        border-color: color-mix(in srgb, var(--primary-color) 35%, transparent);
+        background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+        color: var(--primary-color);
+    }
+
+    .form-layout {
+        @apply grid gap-4 lg:grid-cols-[1.2fr_0.8fr];
+    }
+
+    .form-card,
+    .info-card {
+        background: var(--app-surface-strong);
+        border: 1px solid var(--app-line);
+        border-radius: 1.5rem;
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 22%, transparent);
+        @apply p-5 backdrop-blur-md;
+    }
+
+    .form-grid {
+        @apply grid gap-4 md:grid-cols-2;
+    }
+
+    .field {
+        @apply grid gap-2;
+    }
+
+    .field.full {
+        grid-column: 1 / -1;
+    }
+
+    .hint {
+        @apply text-xs leading-relaxed;
+        color: var(--app-muted);
+    }
+
+    .error-list {
+        @apply mt-4 grid gap-1 rounded-xl border px-4 py-3 text-sm font-semibold;
+        background: var(--app-error-bg);
+        color: var(--app-error-text);
+        border-color: rgb(248 113 113 / 0.35);
+    }
+
+    .schedule,
+    .summary,
+    .note {
+        @apply rounded-xl border p-4 text-sm backdrop-blur-sm;
+        border-color: var(--app-line);
+        background: rgb(255 255 255 / 0.03);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 14%, transparent);
+    }
+
+    .row-between {
+        @apply flex flex-wrap items-start justify-between gap-4;
+    }
+
+    label.checkbox-inline {
+        @apply flex items-center gap-3 font-semibold;
+    }
+
+    label.checkbox-inline input {
+        @apply h-4 w-4 rounded;
+        border-color: var(--app-line);
+        width: auto;
+    }
+
+    label.checkbox {
+        @apply mt-4 flex items-center gap-3 font-semibold;
+    }
+
+    label.checkbox input {
+        @apply h-4 w-4 rounded;
+        border-color: var(--app-line);
+        width: auto;
+    }
+
+    .form-card .grid,
+    .form-layout .grid {
+        @apply grid gap-4 md:grid-cols-2;
+    }
+
+    .button.payment,
+    a.button.payment {
+        @apply inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-3 text-sm font-bold text-[#042f2e] no-underline;
+        background: var(--accent-cta);
+    }
+
+    .form-layout button[type='submit']:not(.btn) {
+        @apply inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-3 text-sm font-bold;
+        background: var(--accent-cta);
+        color: var(--accent-cta-text);
+    }
+
+    body[style*='--primary-color'] .form-layout button[type='submit']:not(.btn) {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-color-deep));
+        color: #fff;
+    }
+
+    .method-fields {
+        @apply hidden;
+    }
+
+    .method-fields.active {
+        @apply mt-4 block;
+    }
+
+    .summary-card {
+        background: var(--app-surface-strong);
+        border: 1px solid var(--app-line);
+        border-radius: 1.5rem;
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 22%, transparent);
+        @apply p-5 backdrop-blur-md;
+    }
+
+    .summary-card h2 {
+        @apply m-0 text-xl font-semibold tracking-tight;
+        color: var(--primary-color);
+    }
+
+    .amount {
+        @apply my-2 text-4xl font-bold;
+        color: var(--accent-cta);
+    }
+
+    .success-box {
+        @apply mb-4 rounded-xl border px-4 py-3 text-sm font-semibold;
+        background: var(--app-success-bg);
+        color: var(--app-success-text);
+        border-color: rgb(34 197 94 / 0.35);
+    }
+
+    .brand-color-picker {
+        @apply grid gap-3 rounded-xl border p-4 backdrop-blur-sm;
+        border-color: var(--app-line);
+        background: rgb(255 255 255 / 0.03);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 18%, transparent);
+    }
+
+    .brand-color-picker__control {
+        @apply flex items-center gap-3;
+    }
+
+    .brand-color-picker__native {
+        @apply h-12 w-12 cursor-pointer rounded-full border-4 border-zinc-800 p-0;
+        background: transparent;
+        box-shadow: 0 0 0 1px var(--app-line);
+    }
+
+    .brand-color-picker__native::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+
+    .brand-color-picker__native::-webkit-color-swatch {
+        border: 0;
+        border-radius: 9999px;
+    }
+
+    .brand-color-picker__native::-moz-color-swatch {
+        border: 0;
+        border-radius: 9999px;
+    }
+
+    .brand-color-picker__value {
+        @apply font-semibold uppercase tracking-wide text-zinc-200;
+    }
+
+    .brand-color-picker__swatches {
+        @apply flex flex-wrap gap-2;
+    }
+
+    .brand-color-picker__swatch {
+        @apply h-7 w-7 cursor-pointer rounded-full border-2 border-zinc-700 p-0 transition hover:scale-105;
+        box-shadow: 0 0 0 1px var(--app-line);
+    }
+
+    .brand-color-picker__preview {
+        @apply flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs font-semibold text-zinc-200;
+        border-color: var(--app-line);
+        background: rgb(0 0 0 / 0.25);
+    }
+
+    .service-image-grid {
+        @apply grid gap-3 sm:grid-cols-2 lg:grid-cols-4;
+    }
+
+    .service-image-card {
+        @apply overflow-hidden rounded-xl border bg-black/20;
+        border-color: var(--app-line);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 20%, transparent);
+    }
+
+    .service-image-card img {
+        @apply h-28 w-full object-cover;
+    }
+
+    .service-image-card__remove {
+        @apply flex items-center gap-2 px-3 py-2 text-xs font-semibold text-[var(--app-muted)];
+    }
+
+    .service-image-card__remove input {
+        @apply h-4 w-4 rounded;
+        border-color: var(--app-line);
+        width: auto;
+    }
+
+    .business-market-card {
+        @apply overflow-hidden rounded-2xl border backdrop-blur-md;
+        border-color: var(--app-line);
+        background: var(--app-surface-strong);
+        box-shadow:
+            0 0 0 1px var(--accent-border-glow),
+            0 16px 40px rgb(0 0 0 / 0.35);
+    }
+
+    .business-market-card__media {
+        @apply relative block h-52 w-full overflow-hidden bg-zinc-900;
+        border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
+    }
+
+    .business-market-card__media::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary-color) 25%, transparent);
+    }
+
+    .business-market-card__media img {
+        @apply h-full w-full object-cover transition duration-500 hover:scale-105;
+    }
+
+    .business-market-card__body {
+        @apply grid gap-3 p-4;
+    }
+
+    .business-market-card__rating {
+        @apply inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold;
+        border-color: color-mix(in srgb, var(--primary-color) 30%, transparent);
+        background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+        color: var(--app-text);
+    }
+
+    .business-market-card__rating small {
+        @apply text-[10px] text-zinc-400;
+    }
+
+    .business-market-card__service {
+        @apply flex items-center justify-between rounded-lg border px-3 py-2 text-sm;
+        border-color: var(--app-line);
+        background: rgb(255 255 255 / 0.03);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 12%, transparent);
+    }
+
+    .business-market-card__service strong {
+        @apply mr-3 text-zinc-100;
+    }
+
+    .business-market-card__service span {
+        @apply text-xs font-semibold text-[var(--app-muted)];
+    }
+
+    .market-filter-row {
+        @apply flex flex-wrap gap-2;
+    }
+
+    .market-filter-chip {
+        @apply rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-wide transition;
+        border-color: var(--app-line);
+        background: rgb(255 255 255 / 0.03);
+        color: var(--app-muted);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 10%, transparent);
+    }
+
+    .market-filter-chip:hover {
+        border-color: color-mix(in srgb, var(--primary-color) 40%, transparent);
+        color: var(--app-text);
+    }
+
+    .market-filter-chip.is-active {
+        border-color: color-mix(in srgb, var(--primary-color) 55%, transparent);
+        background: color-mix(in srgb, var(--primary-color) 18%, transparent);
+        color: var(--primary-color);
+        box-shadow: 0 0 0 1px var(--accent-border-glow);
+    }
+
+    .review-carousel-controls {
+        @apply mb-3 flex items-center justify-end gap-2;
+    }
+
+    .review-carousel-btn {
+        @apply inline-flex h-9 w-9 items-center justify-center rounded-full border transition;
+        border-color: var(--app-line);
+        background: rgb(255 255 255 / 0.05);
+        color: var(--app-text);
+    }
+
+    .review-carousel-btn:hover {
+        border-color: color-mix(in srgb, var(--primary-color) 45%, transparent);
+        background: rgb(255 255 255 / 0.1);
+    }
+
+    .review-carousel-track {
+        @apply flex snap-x gap-4 overflow-x-auto pb-2;
+        scroll-behavior: smooth;
+    }
+
+    .review-carousel-track::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .review-carousel-track::-webkit-scrollbar-thumb {
+        background: color-mix(in srgb, var(--primary-color) 45%, transparent);
+        border-radius: 999px;
+    }
+
+    .review-carousel-card {
+        @apply w-[340px] shrink-0 snap-start;
+    }
+
+    .review-image-button {
+        @apply block rounded-lg p-0;
+        background: transparent;
+    }
+
+    .review-lightbox {
+        @apply fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm;
+    }
+
+    .review-lightbox-image {
+        @apply max-h-[88vh] w-auto max-w-[90vw] rounded-xl border object-contain;
+        border-color: color-mix(in srgb, var(--primary-color) 40%, transparent);
+    }
+
+    .review-lightbox-close {
+        @apply absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border transition;
+        border-color: var(--app-line);
+        background: rgb(0 0 0 / 0.5);
+        color: #fff;
+    }
+
+    .review-lightbox-close:hover {
+        border-color: color-mix(in srgb, var(--primary-color) 45%, transparent);
     }
 }

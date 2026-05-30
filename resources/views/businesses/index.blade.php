@@ -24,7 +24,7 @@
 
         <div class="list" style="margin-top: 1.5rem;">
             @forelse ($businesses as $business)
-                <article class="card" style="--primary-color: {{ $business->brandColor() }}; --primary-color-deep: #6a2d1e; --primary-soft: #f1e3d7;">
+                <article class="card" style="--primary-color: {{ $business->brandColor() }};">
                     <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start;">
                         <div>
                             <div class="actions" style="margin-bottom: 0.65rem;">

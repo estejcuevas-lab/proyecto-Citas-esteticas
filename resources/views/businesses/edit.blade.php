@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Editar negocio')
-@section('theme_style', '--primary-color: '.old('primary_color', $business->brandColor()).'; --primary-color-deep: #6a2d1e; --primary-soft: #f1e3d7;')
+@section('theme_style', '--primary-color: '.old('primary_color', $business->brandColor()).';')
 
 @section('content')
     <section class="surface" style="max-width: 960px; margin: 0 auto;">
@@ -56,10 +56,10 @@
                             <input id="slug" name="slug" type="text" value="{{ old('slug', $business->slug) }}" required>
                         </label>
 
-                        <label for="primary_color">
-                            Color principal
-                            <input id="primary_color" name="primary_color" type="text" value="{{ old('primary_color', $business->brandColor()) }}" required>
-                        </label>
+                        @include('businesses.partials.brand-color-picker', [
+                            'inputId' => 'primary_color',
+                            'value' => old('primary_color', $business->brandColor()),
+                        ])
                     </div>
 
                     <label for="type">

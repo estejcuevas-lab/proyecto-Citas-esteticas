@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Appointment;
 use App\Models\Business;
 use App\Models\BusinessHour;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 
 class PublicBusinessController extends Controller
 {
@@ -21,6 +23,8 @@ class PublicBusinessController extends Controller
                     ->where('active', true)
                     ->orderBy('name'),
             ])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
             ->orderBy('name')
             ->get();
 
@@ -29,7 +33,7 @@ class PublicBusinessController extends Controller
         ]);
     }
 
-    public function show(Business $business): View
+    public function show(Request $request, Business $business): View
     {
         abort_unless(
             $business->user()
@@ -48,11 +52,29 @@ class PublicBusinessController extends Controller
             'hours' => fn ($query) => $query
                 ->where('is_active', true)
                 ->orderBy('day_of_week'),
+            'reviews' => fn ($query) => $query
+                ->with('user:id,name,avatar')
+                ->latest(),
         ]);
+
+        $business->loadCount('reviews');
+        $business->loadAvg('reviews', 'rating');
+
+        $user = $request->user();
+        $canReview = false;
+
+        if ($user && $user->isClient()) {
+            $canReview = Appointment::query()
+                ->where('user_id', $user->id)
+                ->where('business_id', $business->id)
+                ->where('status', Appointment::STATUS_COMPLETED)
+                ->exists();
+        }
 
         return view('businesses.public-show', [
             'business' => $business,
             'dayLabels' => BusinessHour::dayOptions(),
+            'canReview' => $canReview,
         ]);
     }
 }
