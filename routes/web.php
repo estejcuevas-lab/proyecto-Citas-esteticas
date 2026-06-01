@@ -24,22 +24,6 @@ use Illuminate\Support\Facades\Route;
 // GUIA 1 - ACTIVIDAD 3: ANALISIS DE CAPAS
 // Las rutas separan la entrada HTTP de la logica manejada por controladores y vistas.
 // ======================================================================
-// #region agent debug
-Route::get('/__debug-assets', function () {
-    return response()->json([
-        'deploy_marker' => 'debug-4c6b0f',
-        'app_env' => config('app.env'),
-        'environment' => app()->environment(),
-        'app_url' => config('app.url'),
-        'request_host' => request()->getHost(),
-        'request_secure' => request()->isSecure(),
-        'request_scheme' => request()->getScheme(),
-        'x_forwarded_proto' => request()->header('X-Forwarded-Proto'),
-        'asset_url_sample' => asset('build/assets/sample.css'),
-    ]);
-});
-// #endregion
-
 Route::get('/', [PublicBusinessController::class, 'index'])->name('home');
 Route::redirect('/negocios', '/')->name('public.businesses.index');
 Route::get('/negocios/{business:slug}', [PublicBusinessController::class, 'show'])->name('public.businesses.show');
