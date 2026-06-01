@@ -26,6 +26,7 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist \
 COPY . .
 
 RUN npm run build \
+    && test -f public/build/manifest.json \
     && composer dump-autoload --optimize \
     && mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache

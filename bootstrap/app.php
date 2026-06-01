@@ -25,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // GUIA 2 - ACTIVIDAD 1: INTEROPERABILIDAD
         // El middleware actua como capa transversal para mantener transparencia entre peticiones web y API.
         // ======================================================================
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'profile.completed' => \App\Http\Middleware\EnsureProfileCompleted::class,
             'business.approved' => \App\Http\Middleware\EnsureBusinessApproved::class,
